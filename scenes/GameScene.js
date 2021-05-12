@@ -37,8 +37,7 @@ export default class GameScene extends Phaser.Scene {
     // layer.setOrigin(0);
     // layer.setScrollFactor(0);
     layer.setScale(HEIGHT / layer.height);
-    //this.cameras.main.setBounds(0, 0, WIDTH * 2, HEIGHT);
-    //this.physics.world.setBounds(0, 0, WIDTH * 2, HEIGHT);
+
     this.cameras.main.setBounds(0, 0, layer.x + layer.width + WIDTH, 0);
     this.physics.world.setBounds(0, 0, layer.x + layer.width + WIDTH, 0);
 
