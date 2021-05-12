@@ -30,53 +30,65 @@ export default class GameScene extends Phaser.Scene {
 
     this.anims.create({
       key: "walk",
-      frames: this.anims.generateFrameNumbers("player",  { start: 0, end: 3 }),
+      frames: this.anims.generateFrameNumbers("player", { start: 0, end: 3 }),
       frameRate: 8,
       repeat: 1,
     });
 
     this.anims.create({
       key: "idle",
-      frames: this.anims.generateFrameNumbers("player",  { start: 5, end: 8 }),
+      frames: this.anims.generateFrameNumbers("player", { start: 5, end: 8 }),
       frameRate: 8,
       repeat: 1,
     });
 
     this.anims.create({
       key: "jump",
-      frames: this.anims.generateFrameNumbers("player",  { start: 20, end: 23 }),
+      frames: this.anims.generateFrameNumbers("player", { start: 20, end: 23 }),
       frameRate: 16,
       repeat: -1,
     });
 
     this.anims.create({
       key: "die",
-      frames: this.anims.generateFrameNumbers("player",  { start: 35, end: 37 }),
+      frames: this.anims.generateFrameNumbers("player", { start: 35, end: 37 }),
       frameRate: 16,
     });
 
     this.anims.create({
-      key: 'kick',
-      frames: this.anims.generateFrameNumbers('player', { frames: [ 10, 11, 12, 13, 10 ] }),
-      frameRate: 16,
+      key: "kick",
+      frames: this.anims.generateFrameNumbers("player", {
+        frames: [10, 11, 12, 13, 10],
+      }),
+      frameRate: 8,
       repeat: -1,
-      repeatDelay: 2000
-  });
+    });
 
-  this.anims.create({
-      key: 'punch',
-      frames: this.anims.generateFrameNumbers('player', { frames: [ 15, 16, 17, 18, 17, 15 ] }),
-      frameRate: 16,
+    this.anims.create({
+      key: "punch",
+      frames: this.anims.generateFrameNumbers("player", {
+        frames: [15, 16, 17, 18, 17, 15],
+      }),
+      frameRate: 8,
       repeat: -1,
-      repeatDelay: 2000
-  });
+    });
 
     this.player = this.physics.add.sprite(50, 100, "player");
-    this.player.anims.play('idle')
-    this.input.keyboard.on('keydown-X', () => {
-      console.log("PUNCH")
-      this.player.anims.play("punch",true);
-  });
+    this.player.on("animationrepeat", () => {
+      //listen to when an animation completes, then run fly
+      this.player.anims.play("idle");
+    });
+
+    this.input.keyboard.on("keydown-X", () => {
+      console.log("PUNCH");
+      this.player.anims.play("punch", true);
+    });
+
+    this.input.keyboard.on("keydown-Z", () => {
+      console.log("KICK");
+      this.player.anims.play("kick", true);
+    });
+
     this.player.setCollideWorldBounds(true);
     this.player.body.onWorldBounds = true;
     this.player.setBounce(0.2);
@@ -113,10 +125,9 @@ export default class GameScene extends Phaser.Scene {
       player.flipX = true;
       //this.player.setScale(-1,1);
       player.anims.play("walk", true);
-    } 
-    else {
+    } else {
       player.setVelocityX(0);
-      player.anims.play("idle", true);
+      //console.log(this.input.keyboard.isUp(65));
     }
 
     if (
@@ -124,14 +135,13 @@ export default class GameScene extends Phaser.Scene {
       (player.body.touching.down || player.body.onFloor())
     ) {
       player.setVelocityY(-250);
-      player.anims.play("jump",true);
-      console.log("Jumped")
+      player.anims.play("jump", true);
+      console.log("Jumped");
     }
 
     if (cursors.space.isDown) {
       this.start();
     }
-
   };
 
   start = () => {
