@@ -10,8 +10,13 @@ export default class GameScene extends Phaser.Scene {
   preload = () => {
     this.load.baseURL = "https://labs.phaser.io/assets/";
     this.load.crossOrigin = "anonymous";
-    this.load.image("background", "games/snowmen-attack/background.png");
+
+    //this.load.image("background", "games/snowmen-attack/background.png");
     this.load.image("platform", "sprites/block.png");
+
+    this.load.tilemapTiledJSON("gameMap", "tilemaps/maps/super-mario-3.json");
+    // this.load.image('gameTiles', 'tilemaps/tiles/platformer_tiles.png');
+    this.load.image("gameTiles", "tilemaps/tiles/super-mario-3.png");
 
     this.load.spritesheet("player", "animations/brawler48x48.png", {
       frameWidth: 48,
@@ -22,11 +27,21 @@ export default class GameScene extends Phaser.Scene {
   create = () => {
     let WIDTH = 800;
     let HEIGHT = 600;
-    let back = this.add.tileSprite(0, 28, WIDTH, HEIGHT, "background");
-    back.setOrigin(0);
-    back.setScrollFactor(0); //fixedToCamera = true;
-    this.cameras.main.setBounds(0, 0, WIDTH, HEIGHT);
-    this.physics.world.setBounds(0, 0, WIDTH, HEIGHT);
+
+    var gameMap = this.add.tilemap("gameMap");
+    var tileSet = gameMap.addTilesetImage(
+      "SuperMarioBrosMap1-3_bank.png",
+      "gameTiles"
+    );
+    var layer = gameMap.createLayer("ShoeBox Tile Grab", tileSet, 0, 0);
+    // layer.setOrigin(0);
+    // layer.setScrollFactor(0);
+    layer.setScale(HEIGHT / layer.height);
+    //this.cameras.main.setBounds(0, 0, WIDTH * 2, HEIGHT);
+    //this.physics.world.setBounds(0, 0, WIDTH * 2, HEIGHT);
+    this.cameras.main.setBounds(0, 0, layer.x + layer.width + WIDTH, 0);
+    this.physics.world.setBounds(0, 0, layer.x + layer.width + WIDTH, 0);
+
 
     this.anims.create({
       key: "walk",
@@ -97,19 +112,19 @@ export default class GameScene extends Phaser.Scene {
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(200, 550, "platform");
-    this.platforms.create(300, 500, "platform");
-    this.platforms.create(400, 450, "platform");
-    this.platforms.create(450, 400, "platform");
-    this.platforms.create(500, 350, "platform");
-    this.platforms.create(600, 300, "platform");
-    this.platforms.create(700, 250, "platform");
-    this.platforms
-      .getChildren()
-      .forEach((c) => c.setScale(0.5).setOrigin(0).refreshBody());
+    // this.platforms = this.physics.add.staticGroup();
+    // this.platforms.create(200, 550, "platform");
+    // this.platforms.create(300, 500, "platform");
+    // this.platforms.create(400, 450, "platform");
+    // this.platforms.create(450, 400, "platform");
+    // this.platforms.create(500, 350, "platform");
+    // this.platforms.create(600, 300, "platform");
+    // this.platforms.create(700, 250, "platform");
+    // this.platforms
+    //   .getChildren()
+    //   .forEach((c) => c.setScale(0.5).setOrigin(0).refreshBody());
 
-    this.physics.add.collider(this.player, this.platforms);
+    //this.physics.add.collider(this.player, this.platforms);
   };
 
   update = () => {
@@ -118,16 +133,13 @@ export default class GameScene extends Phaser.Scene {
     if (cursors.left.isDown) {
       player.setVelocityX(-150);
       player.flipX = false;
-      //this.player.setScale(1,1);
       player.anims.play("walk", true);
     } else if (cursors.right.isDown) {
       player.setVelocityX(150);
       player.flipX = true;
-      //this.player.setScale(-1,1);
       player.anims.play("walk", true);
     } else {
       player.setVelocityX(0);
-      //console.log(this.input.keyboard.isUp(65));
     }
 
     if (
