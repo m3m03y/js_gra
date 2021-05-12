@@ -8,15 +8,15 @@ export default class Player {
         return this.isDead;
     }
 
-    kill(){
+    kill = () =>{
         this.isDead = true;
     }
 
-    makeBig(){
+    makeBig = () =>{
         this.isBigState = true;
     }
 
-    makeSmall(){
+    makeSmall = () =>{
         this.isBigState = false;
     }
 }

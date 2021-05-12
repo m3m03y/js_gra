@@ -7,7 +7,7 @@ export default class GameOverScene extends Phaser.Scene {
         var cursors;
     }
 
-    preload() {
+    preload = () => {
         this.load.baseURL = 'https://examples.phaser.io/assets/';
         this.load.crossOrigin = 'anonymous';
         this.load.image('background', 'games/starstruck/background2.png');
@@ -19,7 +19,7 @@ export default class GameOverScene extends Phaser.Scene {
         );
       }
 
-    create ()
+    create = () =>
     {
         let WIDTH = 800
         let HEIGHT = 600
@@ -71,7 +71,7 @@ export default class GameOverScene extends Phaser.Scene {
     
     }
 
-    update() {
+    update = () => {
         let cursors = this.cursors
         let player = this.player
 
@@ -98,7 +98,7 @@ export default class GameOverScene extends Phaser.Scene {
 
       }
 
-    start ()
+    start = () =>
     {
         this.scene.start('TitleCardScene');
     }

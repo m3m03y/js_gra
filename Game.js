@@ -4,19 +4,19 @@ export default class Game {
         this.score = 0;
     }
 
-    addLife(){
+    addLife = () =>{
         this.lifes++;
     }
 
-    removeLife(){
+    removeLife = () =>{
         this.lifes--;
     }
 
-    addScore(){
+    addScore = () =>{
         this.score++;
     }
 
-    removeScore(){
+    removeScore = () =>{
         this.score--;
     }
 }

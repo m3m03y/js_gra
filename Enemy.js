@@ -7,7 +7,7 @@ export default class Enemy {
         return this.isDead;
     }
 
-    kill(){
+    kill = () =>{
         this.isDead = true;
     }
 }

@@ -1,65 +1,151 @@
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
-    let ball;
-    let paddle;
-    let cursors;
-    var bricks;
+    var player, platforms;
+    var cursors;
+    var keys;
+    this.lives = 5;
   }
 
-  create() {
+  preload = () => {
+    this.load.baseURL = "https://labs.phaser.io/assets/";
+    this.load.crossOrigin = "anonymous";
+    this.load.image("background", "games/snowmen-attack/background.png");
+    this.load.image("platform", "sprites/block.png");
 
-    this.ball = this.physics.add.sprite(250, 350, "ball");
-    this.ball.setOrigin(0.5, 0.5);
-    this.ball.body.velocity.x = 100;
-    this.ball.body.velocity.y = -150;
-    this.ball.body.setCollideWorldBounds(true);
-    this.ball.body.bounce.set(1);
+    this.load.spritesheet("player", "animations/brawler48x48.png", {
+      frameWidth: 48,
+      frameHeight: 49,
+    });
+  };
 
-    this.paddle = this.physics.add.sprite(150, 380, "paddle");
-    this.paddle.setOrigin(0.5);
+  create = () => {
+    let WIDTH = 800;
+    let HEIGHT = 600;
+    let back = this.add.tileSprite(0, 28, WIDTH, HEIGHT, "background");
+    back.setOrigin(0);
+    back.setScrollFactor(0); //fixedToCamera = true;
+    this.cameras.main.setBounds(0, 0, WIDTH, HEIGHT);
+    this.physics.world.setBounds(0, 0, WIDTH, HEIGHT);
+
+    this.anims.create({
+      key: "walk",
+      frames: this.anims.generateFrameNumbers("player",  { start: 0, end: 3 }),
+      frameRate: 8,
+      repeat: 1,
+    });
+
+    this.anims.create({
+      key: "idle",
+      frames: this.anims.generateFrameNumbers("player",  { start: 5, end: 8 }),
+      frameRate: 8,
+      repeat: 1,
+    });
+
+    this.anims.create({
+      key: "jump",
+      frames: this.anims.generateFrameNumbers("player",  { start: 20, end: 23 }),
+      frameRate: 16,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: "die",
+      frames: this.anims.generateFrameNumbers("player",  { start: 35, end: 37 }),
+      frameRate: 16,
+    });
+
+    this.anims.create({
+      key: 'kick',
+      frames: this.anims.generateFrameNumbers('player', { frames: [ 10, 11, 12, 13, 10 ] }),
+      frameRate: 16,
+      repeat: -1,
+      repeatDelay: 2000
+  });
+
+  this.anims.create({
+      key: 'punch',
+      frames: this.anims.generateFrameNumbers('player', { frames: [ 15, 16, 17, 18, 17, 15 ] }),
+      frameRate: 16,
+      repeat: -1,
+      repeatDelay: 2000
+  });
+
+    this.player = this.physics.add.sprite(50, 100, "player");
+    this.player.anims.play('idle')
+    this.input.keyboard.on('keydown-X', () => {
+      console.log("PUNCH")
+      this.player.anims.play("punch",true);
+  });
+    this.player.setCollideWorldBounds(true);
+    this.player.body.onWorldBounds = true;
+    this.player.setBounce(0.2);
+    this.cameras.main.startFollow(this.player);
+    this.physics.world.on("worldbounds", this.gameOver);
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    this.paddle.body.setCollideWorldBounds(true);
-    this.paddle.body.immovable = true;
+    this.platforms = this.physics.add.staticGroup();
+    this.platforms.create(200, 550, "platform");
+    this.platforms.create(300, 500, "platform");
+    this.platforms.create(400, 450, "platform");
+    this.platforms.create(450, 400, "platform");
+    this.platforms.create(500, 350, "platform");
+    this.platforms.create(600, 300, "platform");
+    this.platforms.create(700, 250, "platform");
+    this.platforms
+      .getChildren()
+      .forEach((c) => c.setScale(0.5).setOrigin(0).refreshBody());
 
-    this.bricks = this.physics.add.staticGroup();
-    for (var y = 0; y < 4; ++y) {
-      for (var x = 0; x < 7; ++x) {
-        let brick = this.bricks.create(40 + x * 36, 80 + y * 40, "brick");
-      }
-    }
-  }
+    this.physics.add.collider(this.player, this.platforms);
+  };
 
-  update() {
-    let ball = this.ball
-    let paddle = this.paddle
-    let cursors = this.cursors
-    let bricks = this.bricks
-
-    paddle.body.velocity.x = 0;
+  update = () => {
+    let cursors = this.cursors;
+    let player = this.player;
     if (cursors.left.isDown) {
-      paddle.body.velocity.x = -250;
+      player.setVelocityX(-150);
+      player.flipX = false;
+      //this.player.setScale(1,1);
+      player.anims.play("walk", true);
     } else if (cursors.right.isDown) {
-      paddle.body.velocity.x = 250;
-    }else if (cursors.space.isDown){
-        this.start()
+      player.setVelocityX(150);
+      player.flipX = true;
+      //this.player.setScale(-1,1);
+      player.anims.play("walk", true);
+    } 
+    else {
+      player.setVelocityX(0);
+      player.anims.play("idle", true);
     }
 
-    this.physics.collide(ball, paddle, this.ballHitsPaddle);
-    this.physics.collide(ball, bricks, this.ballHitsBrick);
-  }
+    if (
+      cursors.up.isDown &&
+      (player.body.touching.down || player.body.onFloor())
+    ) {
+      player.setVelocityY(-250);
+      player.anims.play("jump",true);
+      console.log("Jumped")
+    }
 
-  ballHitsPaddle(ball, paddle) {
-    ball.body.velocity.x = 5 * (ball.x - paddle.x);
-  }
+    if (cursors.space.isDown) {
+      this.start();
+    }
 
-  ballHitsBrick(ball, brick) {
-    brick.disableBody(true, true);
-  }
+  };
 
-  start() {
-    this.scene.start("GameOverScene");
-  }
+  start = () => {
+    this.scene.start("TitleCardScene");
+  };
+
+  gameOver = (ball, up, down, left, right) => {
+    let lives = this.lives;
+    if (down && lives != 0) {
+      this.lives -= 1;
+      console.log(lives);
+    }
+    if (this.lives == 0) {
+      console.log("Game Over");
+    }
+  };
 }

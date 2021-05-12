@@ -3,7 +3,7 @@ export default class TitleCardScene extends Phaser.Scene {
     super("TitleCardScene");
   }
 
-  init() {
+  init = () => {
     let element = document.createElement("style");
     document.head.appendChild(element);
     element.sheet.insertRule(
@@ -12,7 +12,7 @@ export default class TitleCardScene extends Phaser.Scene {
     );
   }
 
-  preload() {
+  preload = () => {
     this.load.crossOrigin = "anonymous";
     this.load.baseURL = "https://examples.phaser.io/assets/";
     this.load.image("ball", "games/breakout/ball.png");
@@ -20,9 +20,9 @@ export default class TitleCardScene extends Phaser.Scene {
     this.load.image("brick", "games/breakout/brick1.png");
   }
 
-  create() {
+  create = () => {
     this.add
-      .text(720, 0, "S\n t\na\n c\nk\n e\nr", {
+      .text(720, 0, "G\n R\nA\n n\na\n J\nS", {
         fontFamily: "bebas",
         fontSize: 74,
         color: "#ffffff",
@@ -39,11 +39,8 @@ export default class TitleCardScene extends Phaser.Scene {
       .setShadow(2, 2, "#333333", 2, false, true);
 
     var help = [
-      "Build a tower all the way to the top of the screen",
-      'to win big "prizes"! Place rows of blocks on top',
-      "of each other, but be careful: it gets faster each",
-      "time, you lose blocks if you don't land perfectly,",
-      "and you automatically shrink after rows 5 and 10!",
+      "Jest to ekran początkowy do gry Arcadowej",
+      'wykonanej we frameworku Phaser.',
     ];
 
     this.add
@@ -56,20 +53,18 @@ export default class TitleCardScene extends Phaser.Scene {
       .setShadow(2, 2, "#333333", 2, false, true);
 
     this.add
-      .text(20, 450, "Space Bar or Click to Place a Row", {
+      .text(20, 300, "Press SPACE to play", {
         fontFamily: "bebas",
         fontSize: 40,
         color: "#ffffff",
       })
       .setShadow(2, 2, "#333333", 2, false, true);
 
-    this.input.keyboard.once("keydown_SPACE", this.start, this);
-    this.input.once("pointerdown", this.start, this);
+    this.input.keyboard.on("keydown-SPACE", this.start, this);
   }
 
 
-  start() {
-    console.log("WUH");
+  start = () => {
     this.scene.start("GameScene");
   }
 }
