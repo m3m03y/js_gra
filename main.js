@@ -1,3 +1,6 @@
+import Game from './Game.js';
+import Player from './Player.js';
+import Enemy from './Enemy.js';
 
 const appDiv = document.getElementById('app');
 
