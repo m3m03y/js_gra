@@ -1,6 +1,5 @@
 
 //CONFIGURATION
-
 import GameOverScene from "./scenes/GameOverScene.js";
 import GameScene from "./scenes/GameScene.js";
 import TitleCardScene from "./scenes/TitleCardScene.js";

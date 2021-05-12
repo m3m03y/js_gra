@@ -21,6 +21,8 @@ export default class GameOverScene extends Phaser.Scene {
 
     create ()
     {
+        let WIDTH = 800
+        let HEIGHT = 600
         let back = this.add.tileSprite(0, 28, WIDTH, HEIGHT, 'background');
         back.setOrigin(0)
         back.setScrollFactor(0);//fixedToCamera = true;
@@ -30,7 +32,7 @@ export default class GameOverScene extends Phaser.Scene {
         this.player = this.physics.add.sprite(50, 100, 'player');
         this.player.setCollideWorldBounds(true);
         this.player.setBounce(0.2);
-        this.cameras.main.startFollow(player)
+        this.cameras.main.startFollow(this.player)
       
         this.anims.create({
           key: 'left',
@@ -55,16 +57,16 @@ export default class GameOverScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
       
         this.platforms = this.physics.add.staticGroup();
-        this.platforms.create(200, 240, 'platform');
-        this.platforms.create(300, 190, 'platform');
-        this.platforms.create(400, 140, 'platform');
-        this.platforms.create(450, 90, 'platform');
-        this.platforms.create(500, 140, 'platform');
-        this.platforms.create(600, 190, 'platform');
-        this.platforms.create(700, 240, 'platform');
+        this.platforms.create(200, 550, 'platform');
+        this.platforms.create(300, 500, 'platform');
+        this.platforms.create(400, 450, 'platform');
+        this.platforms.create(450, 400, 'platform');
+        this.platforms.create(500, 350, 'platform');
+        this.platforms.create(600, 300, 'platform');
+        this.platforms.create(700, 250, 'platform');
         this.platforms.getChildren().forEach(c => c.setScale(0.5).setOrigin(0).refreshBody())
       
-        this.physics.add.collider(player, platforms);
+        this.physics.add.collider(this.player, this.platforms);
 
     
     }
@@ -85,10 +87,15 @@ export default class GameOverScene extends Phaser.Scene {
           player.setVelocityX(0);
           player.anims.play('front');
         }
-      
+        
         if (cursors.up.isDown && (player.body.touching.down || player.body.onFloor())) {
           player.setVelocityY(-250);
         }
+
+        if(cursors.space.isDown){
+            this.start()
+        }
+
       }
 
     start ()
