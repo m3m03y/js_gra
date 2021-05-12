@@ -1,3 +1,4 @@
+
 //CONFIGURATION
 
 import GameOverScene from "./scenes/GameOverScene.js";
@@ -11,8 +12,13 @@ let config = {
   backgroundColor: "48a",
   physics:{
     default: 'arcade',
+    arcade: {
+      gravity: { y: 500 },
+      debug: false
+    }
   },
   scene: [TitleCardScene,GameScene,GameOverScene]
 };
 
 let game = new Phaser.Game(config);
+
