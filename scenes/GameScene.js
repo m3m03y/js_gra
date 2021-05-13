@@ -14,9 +14,12 @@ export default class GameScene extends Phaser.Scene {
     //this.load.image("background", "games/snowmen-attack/background.png");
     this.load.image("platform", "sprites/block.png");
 
-    this.load.tilemapTiledJSON("gameMap", "tilemaps/maps/super-mario-3.json");
+    this.load.tilemapTiledJSON("gameMap", "tilemaps/maps/super-mario.json");
     // this.load.image('gameTiles', 'tilemaps/tiles/platformer_tiles.png');
-    this.load.image("gameTiles", "tilemaps/tiles/super-mario-3.png");
+    this.load.image("gameTiles", "tilemaps/tiles/super-mario.png",{
+      frameWidth: 16,
+      frameHeight: 16
+    });
 
     this.load.spritesheet("player", "animations/brawler48x48.png", {
       frameWidth: 48,
@@ -30,16 +33,20 @@ export default class GameScene extends Phaser.Scene {
 
     var gameMap = this.add.tilemap("gameMap");
     var tileSet = gameMap.addTilesetImage(
-      "SuperMarioBrosMap1-3_bank.png",
+      "SuperMarioBros-World1-1",
       "gameTiles"
     );
-    var layer = gameMap.createLayer("ShoeBox Tile Grab", tileSet, 0, 0);
+    var layer = gameMap.createLayer("World1", tileSet, 0, 0);
     // layer.setOrigin(0);
     // layer.setScrollFactor(0);
     layer.setScale(HEIGHT / layer.height);
+    //collidery z podłożem
+    gameMap.setCollision([
+      14, 15, 16, 20, 21, 22, 23, 24, 25, 27, 28, 29, 33, 39, 40,
+   ]);
 
-    this.cameras.main.setBounds(0, 0, layer.x + layer.width + WIDTH, 0);
-    //this.physics.world.setBounds(0, 0, layer.x + layer.width + WIDTH, 0);
+    this.cameras.main.setBounds(0, 0, layer.x + layer.width + WIDTH, HEIGHT);
+    this.physics.world.setBounds(0, 0, layer.x + layer.width + WIDTH,HEIGHT );
 
 
     this.anims.create({
@@ -110,7 +117,8 @@ export default class GameScene extends Phaser.Scene {
     this.physics.world.on("worldbounds", this.gameOver);
 
     this.cursors = this.input.keyboard.createCursorKeys();
-
+    //this.physics.collide(this.player, layer);
+    this.physics.add.collider(this.player, layer);
     // this.platforms = this.physics.add.staticGroup();
     // this.platforms.create(200, 550, "platform");
     // this.platforms.create(300, 500, "platform");
