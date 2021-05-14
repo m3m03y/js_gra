@@ -231,10 +231,8 @@ export default class GameScene extends Phaser.Scene {
     }
   };
 
-  dealDamage = () =>{
-
-  
-
+  dealDamage = (player, enemy) =>{
+    player.getDamage(enemy.giveDamage())
   }
 
   collectGem = (player,star) =>{
