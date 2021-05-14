@@ -1,4 +1,5 @@
-
+const WIDTH = 800;
+const HEIGHT = 600;
 export default class GameOverScene extends Phaser.Scene {
 
     constructor ()
@@ -10,13 +11,13 @@ export default class GameOverScene extends Phaser.Scene {
 
     preload = () => {
       this.load.crossOrigin = "anonymous";
-      this.load.baseURL = "https://examples.phaser.io/assets/";
-      this.load.image("ball", "games/breakout/ball.png");
-      this.load.image("paddle", "games/breakout/paddle.png");
-      this.load.image("brick", "games/breakout/brick1.png");
+      this.load.image("background3", "../assets/game_over_background.png");
     }
   
     create = () => {
+      var back = this.add.tileSprite(0, 0, WIDTH, HEIGHT, "background3");
+      back.setOrigin(0);
+      
       this.add
         .text(20, 180, "The last judgment draweth nigh...", {
           fontFamily: "bebas",

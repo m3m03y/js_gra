@@ -1,3 +1,5 @@
+const WIDTH = 800;
+const HEIGHT = 600;
 export default class TitleCardScene extends Phaser.Scene {
   constructor() {
     super("TitleCardScene");
@@ -14,13 +16,13 @@ export default class TitleCardScene extends Phaser.Scene {
 
   preload = () => {
     this.load.crossOrigin = "anonymous";
-    this.load.baseURL = "https://examples.phaser.io/assets/";
-    this.load.image("ball", "games/breakout/ball.png");
-    this.load.image("paddle", "games/breakout/paddle.png");
-    this.load.image("brick", "games/breakout/brick1.png");
+    this.load.image("background", "../assets/background3.png");
   }
 
   create = () => {
+    var back = this.add.tileSprite(0, 0, WIDTH, HEIGHT, "background");
+    back.setOrigin(0);
+
     this.add
       .text(720, 0, "G\n R\nA\n n\na\n J\nS", {
         fontFamily: "bebas",

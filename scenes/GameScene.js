@@ -1,3 +1,4 @@
+import HealthBar from '../sprites/healthBar.js'
 const WIDTH = 800;
 const HEIGHT = 600;
 export default class GameScene extends Phaser.Scene {
@@ -5,14 +6,17 @@ export default class GameScene extends Phaser.Scene {
     super("GameScene");
     this.lives = 5;
     this.enemies = [];
+    this.gems;
+    this.score = 0;
+    this.scoreText;
   }
 
   preload = () => {
     this.load.crossOrigin = "anonymous";
-    this.load.image("background", "https://labs.phaser.io/assets/games/snowmen-attack/background.png");
+    //this.load.image("background", "../assets/background3.png");
+    this.load.bitmapFont("pixelFont","assets/font.png","assets/font.xml");
     this.load.image("platform", "https://labs.phaser.io/assets/sprites/block.png");
-    // this.load.animations('gemsData','https://labs.phaser.io/assets/animations/gems.json')
-    // this.load.atlas('gems','https://labs.phaser.io/assets/test/columns/gems.png','https://labs.phaser.io/assets/test/columns/gems.json')
+    this.load.image('gem', 'https://labs.phaser.io/assets/sprites/gem.png');
     this.load.spritesheet("enemy", "https://labs.phaser.io/assets/animations/nyan/cat.png", {
       frameWidth: 97,
       frameHeight: 56
@@ -32,7 +36,9 @@ export default class GameScene extends Phaser.Scene {
 
   create = () => {
 
-    var back = this.add.tileSprite(0, 28, WIDTH, HEIGHT, "background");
+    this.scoreText = this.add.text(16,16,"SCORE:")
+
+    var back = this.add.tileSprite(0, -40, WIDTH, HEIGHT, "background");
     back.setOrigin(0);
     back.setScrollFactor(0);
 
@@ -42,15 +48,15 @@ export default class GameScene extends Phaser.Scene {
       "gameTiles"
     );
     var layer = gameMap.createLayer("Layer", tileSet, 0, 0);
-
-    layer.setScale(HEIGHT / layer.height);
+    let scale = HEIGHT / layer.height;
+    layer.setScale(scale);
     //collidery z podłożem
     gameMap.setCollision([
       31, 32, 33, 34, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 104, 105, 106, 107
     ]);
 
-    this.cameras.main.setBounds(0, 0, layer.x + layer.width + WIDTH, HEIGHT);
-    this.physics.world.setBounds(0, 0, layer.x + layer.width + WIDTH, HEIGHT);
+    this.cameras.main.setBounds(0, 0, layer.width * scale, HEIGHT);
+    this.physics.world.setBounds(0, 0, layer.width * scale, HEIGHT);
     this.physics.world.on("worldbounds", this.gameOver);
 
     //PLAYER ANIMS
@@ -108,7 +114,8 @@ export default class GameScene extends Phaser.Scene {
       frameRate: 16
     })
 
-    this.player = this.physics.add.sprite(50, 100, "player");
+    this.player = this.physics.add.sprite(50, 500, "player");
+    this.player.setDepth(1)
     this.player.on("animationrepeat", () => {
       //listen to when an animation completes, then run fly
       this.player.anims.play("idle");
@@ -122,23 +129,54 @@ export default class GameScene extends Phaser.Scene {
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
-
+    this.enemies = [];
     //Tworzenie przeciwników
-    let enemy = this.physics.add.sprite(100, 100, "enemy");
+    let enemy = this.physics.add.sprite(120, 500, "enemy");
+   
+    enemy.immovable = true
+    // enemy.hp = new HealthBar(this,enemy.x,enemy.y);
     enemy.body.gravity.y = 500;
     enemy.setCollideWorldBounds(true, true, false, false);
     enemy.body.onWorldBounds = false;
     this.physics.add.collider(enemy, layer);
     enemy.setScale(0.7)
     enemy.setBounce(0.1)
-    enemy.anims.play("evil_walk", true);
+
     this.enemies.push(enemy);
+
+    this.gems = this.physics.add.group({
+      key:"gem",
+      repeat:100,
+      setXY:{x:100,y:200,stepX:150},
+    });
+
+    this.gems.children.iterate(function (child){
+      child.setBounceY(Phaser.Math.FloatBetween(0.1,0.3));
+      child.setScale(0.3)
+    })
+
     //Player colliders
     this.physics.add.collider(this.player, layer);
-    this.physics.add.collider(this.player, enemy,this.dealDamage);
+    this.physics.add.overlap(this.player, enemy,this.dealDamage,null,this);
+
+    //Enemy battle system
+    this.input.keyboard.on("keydown-Z", () => {
+      console.log("KICK")
+      this.player.anims.play("kick", true);
+    });
+
+    this.input.keyboard.on("keydown-X", () => {
+      console.log("PUNCH");
+      this.player.anims.play("punch", true);
+    });
+
+    //Gems colliders
+    this.physics.add.collider(this.gems,layer);
+    this.physics.add.collider(this.gems,this.player,this.collectGem)
   };
 
   update = () => {
+  
     let cursors = this.cursors;
     let player = this.player;
     if (cursors.left.isDown) {
@@ -153,6 +191,11 @@ export default class GameScene extends Phaser.Scene {
       player.setVelocityX(0);
     }
 
+    if (this.enemies.length != 0)
+    this.enemies.forEach(o => o.anims.play("evil_walk", true));
+    
+    //this.physics.moveToObject(this.enemies[0],player,200)
+
     if (
       cursors.up.isDown &&
       (player.body.touching.down || player.body.onFloor())
@@ -164,15 +207,6 @@ export default class GameScene extends Phaser.Scene {
 
     if (cursors.space.isDown) {
       this.start();
-    }
-
-    // if (this.enemies[0].body.onFloor()){
-    //   console.log("Nyan cat dead");
-    //   //this.enemies[0].Destroy();
-    // }
-    if(this.player.body.onFloor() && this.player.body.y == HEIGHT){
-      console.log(this.player.body.y)
-      //this.gameOver();
     }
   };
 
@@ -199,16 +233,15 @@ export default class GameScene extends Phaser.Scene {
 
   dealDamage = () =>{
 
-    this.input.keyboard.on("keydown-Z", () => {
-      console.log("Damage Dealt With kick");
-      this.player.anims.play("kick", true);
-    });
+  
 
-    this.input.keyboard.on("keydown-X", () => {
-      console.log("PUNCH");
-      this.player.anims.play("punch", true);
-    });
+  }
 
+  collectGem = (player,star) =>{
+    star.disableBody(true,true)
+    this.score += 10
+    this.scoreText.setText('Score: ' + this.score)
+    console.log("SCORE: " + this.score, "scoreText: " + this.scoreText.getText)
   }
 
 }
