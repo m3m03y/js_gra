@@ -11,12 +11,4 @@ export default class Player {
     kill(){
         this.isDead = true;
     }
-
-    makeBig(){
-        this.isBigState = true;
-    }
-
-    makeSmall(){
-        this.isBigState = false;
-    }
 }

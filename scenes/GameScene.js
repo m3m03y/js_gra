@@ -1,21 +1,24 @@
+const WIDTH = 800;
+const HEIGHT = 600;
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
-    var player, platforms;
-    var cursors;
-    var keys;
     this.lives = 5;
+    this.enemies = [];
   }
 
   preload = () => {
-    //this.load.baseURL = "https://labs.phaser.io/assets/";
     this.load.crossOrigin = "anonymous";
-
     this.load.image("background", "https://labs.phaser.io/assets/games/snowmen-attack/background.png");
     this.load.image("platform", "https://labs.phaser.io/assets/sprites/block.png");
+    // this.load.animations('gemsData','https://labs.phaser.io/assets/animations/gems.json')
+    // this.load.atlas('gems','https://labs.phaser.io/assets/test/columns/gems.png','https://labs.phaser.io/assets/test/columns/gems.json')
+    this.load.spritesheet("enemy", "https://labs.phaser.io/assets/animations/nyan/cat.png", {
+      frameWidth: 97,
+      frameHeight: 56
+    });
 
     this.load.tilemapTiledJSON("gameMap", "../assets/maps/platform.json");
-    // this.load.image('gameTiles', 'tilemaps/tiles/platformer_tiles.png');
     this.load.image("gameTiles", "../assets/tiles/platformer_tiles.png", {
       frameWidth: 16,
       frameHeight: 16
@@ -28,8 +31,6 @@ export default class GameScene extends Phaser.Scene {
   };
 
   create = () => {
-    let WIDTH = 800;
-    let HEIGHT = 600;
 
     var back = this.add.tileSprite(0, 28, WIDTH, HEIGHT, "background");
     back.setOrigin(0);
@@ -41,17 +42,18 @@ export default class GameScene extends Phaser.Scene {
       "gameTiles"
     );
     var layer = gameMap.createLayer("Layer", tileSet, 0, 0);
-    
+
     layer.setScale(HEIGHT / layer.height);
     //collidery z podłożem
     gameMap.setCollision([
-      31, 32, 33, 34, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 104,105,106,107
+      31, 32, 33, 34, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 104, 105, 106, 107
     ]);
 
     this.cameras.main.setBounds(0, 0, layer.x + layer.width + WIDTH, HEIGHT);
     this.physics.world.setBounds(0, 0, layer.x + layer.width + WIDTH, HEIGHT);
+    this.physics.world.on("worldbounds", this.gameOver);
 
-
+    //PLAYER ANIMS
     this.anims.create({
       key: "walk",
       frames: this.anims.generateFrameNumbers("player", { start: 0, end: 3 }),
@@ -97,44 +99,43 @@ export default class GameScene extends Phaser.Scene {
       repeat: -1,
     });
 
+    //ENEMY ANIMS
+    this.anims.create({
+      key: "evil_walk",
+      frames: this.anims.generateFrameNumbers("enemy", {
+        start: 0, end: 5
+      }),
+      frameRate: 16
+    })
+
     this.player = this.physics.add.sprite(50, 100, "player");
     this.player.on("animationrepeat", () => {
       //listen to when an animation completes, then run fly
       this.player.anims.play("idle");
     });
 
-    this.input.keyboard.on("keydown-X", () => {
-      console.log("PUNCH");
-      this.player.anims.play("punch", true);
-    });
 
-    this.input.keyboard.on("keydown-Z", () => {
-      console.log("KICK");
-      this.player.anims.play("kick", true);
-    });
-
-    this.player.setCollideWorldBounds(true);
+    this.player.setCollideWorldBounds(true,true, false, true);
     this.player.body.onWorldBounds = true;
-    this.player.setBounce(0.2);
+    this.player.setBounce(0.1);
     this.cameras.main.startFollow(this.player);
-    this.physics.world.on("worldbounds", this.gameOver);
 
     this.cursors = this.input.keyboard.createCursorKeys();
-    //this.physics.collide(this.player, layer);
-    this.physics.add.collider(this.player, layer);
-    // this.platforms = this.physics.add.staticGroup();
-    // this.platforms.create(200, 550, "platform");
-    // this.platforms.create(300, 500, "platform");
-    // this.platforms.create(400, 450, "platform");
-    // this.platforms.create(450, 400, "platform");
-    // this.platforms.create(500, 350, "platform");
-    // this.platforms.create(600, 300, "platform");
-    // this.platforms.create(700, 250, "platform");
-    // this.platforms
-    //   .getChildren()
-    //   .forEach((c) => c.setScale(0.5).setOrigin(0).refreshBody());
 
-    //this.physics.add.collider(this.player, this.platforms);
+
+    //Tworzenie przeciwników
+    let enemy = this.physics.add.sprite(100, 100, "enemy");
+    enemy.body.gravity.y = 500;
+    enemy.setCollideWorldBounds(true, true, false, false);
+    enemy.body.onWorldBounds = false;
+    this.physics.add.collider(enemy, layer);
+    enemy.setScale(0.7)
+    enemy.setBounce(0.1)
+    enemy.anims.play("evil_walk", true);
+    this.enemies.push(enemy);
+    //Player colliders
+    this.physics.add.collider(this.player, layer);
+    this.physics.add.collider(this.player, enemy,this.dealDamage);
   };
 
   update = () => {
@@ -164,6 +165,15 @@ export default class GameScene extends Phaser.Scene {
     if (cursors.space.isDown) {
       this.start();
     }
+
+    // if (this.enemies[0].body.onFloor()){
+    //   console.log("Nyan cat dead");
+    //   //this.enemies[0].Destroy();
+    // }
+    if(this.player.body.onFloor() && this.player.body.y == HEIGHT){
+      console.log(this.player.body.y)
+      //this.gameOver();
+    }
   };
 
   start = () => {
@@ -177,7 +187,28 @@ export default class GameScene extends Phaser.Scene {
       console.log(lives);
     }
     if (this.lives == 0) {
-      console.log("Game Over");
+      this.scene.start("GameOverScene")
+    }if(down && this.lives > 0){
+      let lives_left = this.lives
+      this.registry.destroy()
+      this.events.off()
+      this.scene.restart()
+      this.lives = lives_left
     }
   };
+
+  dealDamage = () =>{
+
+    this.input.keyboard.on("keydown-Z", () => {
+      console.log("Damage Dealt With kick");
+      this.player.anims.play("kick", true);
+    });
+
+    this.input.keyboard.on("keydown-X", () => {
+      console.log("PUNCH");
+      this.player.anims.play("punch", true);
+    });
+
+  }
+
 }
