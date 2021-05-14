@@ -14,7 +14,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("background", "https://labs.phaser.io/assets/games/snowmen-attack/background.png");
     this.load.image("platform", "https://labs.phaser.io/assets/sprites/block.png");
 
-    this.load.tilemapTiledJSON("gameMap", "../assets/maps/platformer.json");
+    this.load.tilemapTiledJSON("gameMap", "../assets/maps/platform.json");
     // this.load.image('gameTiles', 'tilemaps/tiles/platformer_tiles.png');
     this.load.image("gameTiles", "../assets/tiles/platformer_tiles.png", {
       frameWidth: 16,
@@ -40,7 +40,7 @@ export default class GameScene extends Phaser.Scene {
       "platformer_tiles",
       "gameTiles"
     );
-    var layer = gameMap.createLayer("Layer1", tileSet, 0, 0);
+    var layer = gameMap.createLayer("Layer", tileSet, 0, 0);
     
     layer.setScale(HEIGHT / layer.height);
     //collidery z podłożem
@@ -156,7 +156,7 @@ export default class GameScene extends Phaser.Scene {
       cursors.up.isDown &&
       (player.body.touching.down || player.body.onFloor())
     ) {
-      player.setVelocityY(-400);
+      player.setVelocityY(-300);
       player.anims.play("jump", true);
       console.log("Jumped");
     }
