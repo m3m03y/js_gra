@@ -8,20 +8,20 @@ export default class GameScene extends Phaser.Scene {
   }
 
   preload = () => {
-    this.load.baseURL = "https://labs.phaser.io/assets/";
+    //this.load.baseURL = "https://labs.phaser.io/assets/";
     this.load.crossOrigin = "anonymous";
 
-    //this.load.image("background", "games/snowmen-attack/background.png");
-    this.load.image("platform", "sprites/block.png");
+    this.load.image("background", "https://labs.phaser.io/assets/games/snowmen-attack/background.png");
+    this.load.image("platform", "https://labs.phaser.io/assets/sprites/block.png");
 
-    this.load.tilemapTiledJSON("gameMap", "tilemaps/maps/super-mario.json");
+    this.load.tilemapTiledJSON("gameMap", "../assets/maps/platform.json");
     // this.load.image('gameTiles', 'tilemaps/tiles/platformer_tiles.png');
-    this.load.image("gameTiles", "tilemaps/tiles/super-mario.png",{
+    this.load.image("gameTiles", "../assets/tiles/platformer_tiles.png", {
       frameWidth: 16,
       frameHeight: 16
     });
 
-    this.load.spritesheet("player", "animations/brawler48x48.png", {
+    this.load.spritesheet("player", "https://labs.phaser.io/assets/animations/brawler48x48.png", {
       frameWidth: 48,
       frameHeight: 49,
     });
@@ -31,22 +31,26 @@ export default class GameScene extends Phaser.Scene {
     let WIDTH = 800;
     let HEIGHT = 600;
 
+    var back = this.add.tileSprite(0, 28, WIDTH, HEIGHT, "background");
+    back.setOrigin(0);
+    back.setScrollFactor(0);
+
     var gameMap = this.add.tilemap("gameMap");
     var tileSet = gameMap.addTilesetImage(
-      "SuperMarioBros-World1-1",
+      "platformer_tiles",
       "gameTiles"
     );
-    var layer = gameMap.createLayer("World1", tileSet, 0, 0);
+    var layer = gameMap.createLayer("Tile Layer 1", tileSet, 0, 0);
     // layer.setOrigin(0);
     // layer.setScrollFactor(0);
     layer.setScale(HEIGHT / layer.height);
     //collidery z podłożem
     gameMap.setCollision([
-      14, 15, 16, 20, 21, 22, 23, 24, 25, 27, 28, 29, 33, 39, 40,
-   ]);
+      31, 32, 33, 34, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52
+    ]);
 
     this.cameras.main.setBounds(0, 0, layer.x + layer.width + WIDTH, HEIGHT);
-    this.physics.world.setBounds(0, 0, layer.x + layer.width + WIDTH,HEIGHT );
+    this.physics.world.setBounds(0, 0, layer.x + layer.width + WIDTH, HEIGHT);
 
 
     this.anims.create({
@@ -153,7 +157,7 @@ export default class GameScene extends Phaser.Scene {
       cursors.up.isDown &&
       (player.body.touching.down || player.body.onFloor())
     ) {
-      player.setVelocityY(-250);
+      player.setVelocityY(-400);
       player.anims.play("jump", true);
       console.log("Jumped");
     }
