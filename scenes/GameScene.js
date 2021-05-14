@@ -14,7 +14,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("background", "https://labs.phaser.io/assets/games/snowmen-attack/background.png");
     this.load.image("platform", "https://labs.phaser.io/assets/sprites/block.png");
 
-    this.load.tilemapTiledJSON("gameMap", "../assets/maps/platform.json");
+    this.load.tilemapTiledJSON("gameMap", "../assets/maps/platformer.json");
     // this.load.image('gameTiles', 'tilemaps/tiles/platformer_tiles.png');
     this.load.image("gameTiles", "../assets/tiles/platformer_tiles.png", {
       frameWidth: 16,
@@ -40,13 +40,12 @@ export default class GameScene extends Phaser.Scene {
       "platformer_tiles",
       "gameTiles"
     );
-    var layer = gameMap.createLayer("Tile Layer 1", tileSet, 0, 0);
-    // layer.setOrigin(0);
-    // layer.setScrollFactor(0);
+    var layer = gameMap.createLayer("Layer1", tileSet, 0, 0);
+    
     layer.setScale(HEIGHT / layer.height);
     //collidery z podłożem
     gameMap.setCollision([
-      31, 32, 33, 34, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52
+      31, 32, 33, 34, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 104,105,106,107
     ]);
 
     this.cameras.main.setBounds(0, 0, layer.x + layer.width + WIDTH, HEIGHT);
