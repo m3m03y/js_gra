@@ -5,17 +5,21 @@ export default class GameScene extends Phaser.Scene {
     super("GameScene");
     this.baseLives = 3;
     this.lives = 3;
+    this.BackgroundMusic = true;
     this.playerHP;
     this.lastAttackTimer = 1000
     this.gemsLoc = [];
+    this.healths_pos_x = [641, 1810, 2891];
+    this.healths_pos_y = [500, 515, 485];
     this.kick_key;
     this.punch_key;
     this.enemies_pos_x = [65, 1132, 1962, 2634, 3667];
-    this.enemies_pos_y = [515, 470, 320, 395, 396];
+    this.enemies_pos_y = [515, 470, 320, 395, 380];
     this.score = 0;
     this.last_death_pos_y = 100;
     this.last_death_pos_x = 50;
     this.instruction = "X - PUNCH, Z - KICK, ESC - EXIT";
+    this.enemyFocus;
   }
 
   preload = () => {
@@ -44,7 +48,10 @@ export default class GameScene extends Phaser.Scene {
   };
 
   create = () => {
-    console.log(this.time)
+    if (this.BackgroundMusic) {
+      // this.sound.play('jungle', { volume: 0.1 })
+      this.BackgroundMusic = false;
+    }
     var back = this.add.tileSprite(0, -40, WIDTH, HEIGHT, "background");
     back.setOrigin(0);
     back.setScrollFactor(0);
@@ -155,16 +162,38 @@ export default class GameScene extends Phaser.Scene {
 
     //this.enemies.push(enemy);
     console.log(this.lives);
+    console.log(layer.width + " " + layer.x);
 
     if (this.lives == this.baseLives) {
-      for (let i = 100; i < layer.width; i += 150) this.gemsLoc.push(i);
+      this.healths_pos_x = [641, 1810, 2891];
+      this.healths_pos_y = [500, 515, 485];
+      for (let i = 100; i < layer.width - 200; i += 150) this.gemsLoc.push(i);
     }
 
-    this.gems = this.physics.add.group();
+    //Key to win
+    this.winKey = this.physics.add.sprite(4425, 510, "winKey");
+    this.winKey.setScale(0.2);
+    this.physics.add.collider(this.winKey, layer);
+    this.physics.add.collider(this.winKey, this.player, this.win);
+    //Health pickups
+    this.healthPickups = this.physics.add.group();
+    for (let i = 0; i < this.healths_pos_x.length; i++) {
+      let health = this.physics.add.sprite(this.healths_pos_x[i], this.healths_pos_y[i], "healthPickUp");
+      this.healthPickups.add(health);
+    }
+
+    this.healthPickups.children.iterate(function (child) {
+      child.setBounceY(Phaser.Math.FloatBetween(0.1, 0.3));
+      child.setScale(0.3)
+    })
+
+    this.physics.add.collider(this.healthPickups, layer);
+    this.physics.add.collider(this.healthPickups, this.player, this.collectHealth);
 
     //Create gems
+    this.gems = this.physics.add.group();
     for (let i = 0; i < this.gemsLoc.length; i++) {
-      let gem = this.physics.add.sprite(this.gemsLoc[i], 200, "gem");
+      let gem = this.physics.add.sprite(this.gemsLoc[i], 100, "gem");
       this.gems.add(gem);
     }
 
@@ -173,12 +202,6 @@ export default class GameScene extends Phaser.Scene {
       child.setScale(0.3)
     })
 
-    //Key to win
-    this.winKey = this.physics.add.sprite(4425,510,"winKey");
-    this.winKey.setScale(0.2);
-    this.physics.add.collider(this.winKey, layer);
-    this.physics.add.collider(this.winKey, this.player, this.win);
-    
     //Gems colliders
     this.physics.add.collider(this.gems, layer);
     this.physics.add.collider(this.gems, this.player, this.collectGem);
@@ -198,7 +221,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.punch_key = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     this.kick_key = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
-    
+
 
     this.input.keyboard.on("keydown-I", () => {
       this.instructionText.visible = true;
@@ -211,12 +234,12 @@ export default class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-ESC", () => {
       this.start();
     });
-    
+
     //DEBUG ONLY
     this.input.keyboard.on("keydown-Y", () => {
       console.log("X: " + this.player.x + " Y:" + this.player.y);
-    });    
-    
+    });
+
     this.input.keyboard.on("keydown-E", () => {
       this.player.x = 4315;
       this.player.y = 510;
@@ -225,23 +248,26 @@ export default class GameScene extends Phaser.Scene {
     //Score text
     var style = {
       fontFamily: "Sans-serif",
-      fontSize:"24px",
+      fontSize: "24px",
       fill: "#000000",
       align: "center"
     }
 
     this.scoreText = this.add.text(16, 16, "Score:", style);
-    this.playerHP = this.add.text(16,40,"HP:",style)
+    this.playerHP = this.add.text(16, 40, "HP:", style);
+    this.enemyHP = this.add.text(16, 100, "Enemy HP:", style);
     this.livesText = this.add.text(16, 64, "Lives:", style);
-    this.instructionText = this.add.text(WIDTH/2 - this.instruction.length, 16, this.instruction, style);
+    this.instructionText = this.add.text(WIDTH / 2, 570, this.instruction, style);
     this.updateText();
 
     //tekst podążą za kamerą
     this.scoreText.setScrollFactor(0);
     this.livesText.setScrollFactor(0);
     this.playerHP.setScrollFactor(0);
+    this.enemyHP.setScrollFactor(0);
     this.instructionText.setScrollFactor(0);
     this.instructionText.visible = false;
+    this.enemyHP.visible = false;
   };
 
   update = () => {
@@ -281,16 +307,18 @@ export default class GameScene extends Phaser.Scene {
 
   gameOver = (ball, up, down, left, right) => {
     let lives = this.lives;
-    if ((this.player.health <=0 || down) && lives != 0) {
+    if ((this.player.health <= 0 || down) && lives != 0) {
       this.lives -= 1;
       console.log(lives);
     }
     if (this.lives == 0) {
       //reset lives and score
       this.resetStats();
-      this.scene.start("GameOverScene",{ score: this.score, isWin: false, lives: this.lives })
+      this.scene.start("GameOverScene", { score: this.score, isWin: false, lives: this.lives })
+      this.last_death_pos_x = 50
+      this.BackgroundMusic = true;
     }
-    if ((this.player.health <=0 || down) && this.lives > 0) {
+    if ((this.player.health <= 0 || down) && this.lives > 0) {
       let lives_left = this.lives
       let death_pos_x = this.player.x - 100
       this.registry.destroy()
@@ -303,32 +331,40 @@ export default class GameScene extends Phaser.Scene {
     this.updateText();
   };
 
-  dealDamage = (player,enemy) => {
+  dealDamage = (player, enemy) => {
 
 
-    if(Phaser.Input.Keyboard.JustDown(this.kick_key)){
-      if(enemy.health <=0){
-        enemy.destroy()
+    if (Phaser.Input.Keyboard.JustDown(this.kick_key)) {
+      if (enemy.health <= 40) {
+        if (enemy == this.enemyFocus) {
+          this.enemyFocus = undefined;
+          this.enemyHP.visible = false;
+        }
+        enemy.destroy();
         this.score += 50
-      }else{
-        enemy.health -=35;
+      } else {
+        enemy.health -= 40;
       }
     }
-    if(Phaser.Input.Keyboard.JustDown(this.punch_key)){
-      if(enemy.health <=0){
+    if (Phaser.Input.Keyboard.JustDown(this.punch_key)) {
+      if (enemy.health <= 20) {
+        if (enemy == this.enemyFocus) {
+          this.enemyFocus = undefined;
+          this.enemyHP.visible = false;
+        }
         enemy.destroy()
         this.score += 50
-      }else{
-        enemy.health -=25;
+      } else {
+        enemy.health -= 20;
       }
     }
 
-    if(this.time.now - this.lastAttackTimer > 1000 ){
-      this.player.health -= Phaser.Math.Between(0,30)
+    if (this.time.now - this.lastAttackTimer > 1000) {
+      this.player.health -= Phaser.Math.Between(0, 30)
       this.lastAttackTimer = this.time.now
-        this.updateText()
-      if(this.player.health <= 0){
-        this.gameOver()
+      this.updateText()
+      if (this.player.health <= 0) {
+        this.gameOver();
       }
     }
 
@@ -337,15 +373,29 @@ export default class GameScene extends Phaser.Scene {
   win = (player, winKey) => {
     console.log("WINNER!!!");
     this.scene.start("GameOverScene", { score: this.score, isWin: true, lives: this.lives });
-    this.last_death_pos_x = 50
+    this.resetStats();
+    this.BackgroundMusic = true;
   }
 
-  collectGem = (player, star) => {
-    this.gemsLoc.splice(this.gemsLoc.indexOf(star.x), 1);
-    star.destroy(true, true);
+  collectGem = (player, gem) => {
+    this.gemsLoc.splice(this.gemsLoc.indexOf(gem.x), 1);
+    gem.destroy(true, true);
     this.score += 10;
     this.updateText();
     console.log("SCORE: " + this.score, "scoreText: " + this.scoreText.getText)
+  }
+
+  collectHealth = (player, health) => {
+    this.healths_pos_x.splice(this.healths_pos_x.indexOf(health.x), 1);
+    this.healths_pos_y.splice(this.healths_pos_y.indexOf(health.y), 1);
+    health.destroy(true, true);
+    if (this.player.health < 50) {
+      this.player.health += 50;
+    } else {
+      this.player.health = 100;
+      this.lives += 1;
+    }
+    this.updateText()
   }
 
   updateText = () => {
@@ -355,21 +405,33 @@ export default class GameScene extends Phaser.Scene {
   }
 
   resetStats = () => {
-    this.lives = 5;
+    this.lives = this.baseLives;
     this.score = 0;
+    this.last_death_pos_x = 50;
+    this.enemyFocus = undefined;
   }
 
   enemyAI = (enemy, platform) => {
-    
-    if(Phaser.Math.Distance.BetweenPoints(enemy,this.player) < 200 ){
-      if(enemy.body.velocity.x < 0){
-        enemy.flipX=true
-      }else{
+
+    if (Phaser.Math.Distance.BetweenPoints(enemy, this.player) < 200) {
+      if (enemy.body.velocity.x < 0) {
+        enemy.flipX = true
+      } else {
         enemy.flipX = false
       }
-      this.physics.moveToObject(enemy,this.player,120)
+      this.physics.moveToObject(enemy, this.player, 120)
+      if (this.enemyFocus == undefined) {
+        this.enemyFocus = enemy;
+      }
+      if (this.enemyFocus == enemy) {
+        this.enemyHP.setText(`Enemy HP: ${enemy.health}/100`);
+        this.enemyHP.visible = true;
+      }
+    } else {
+      if (this.enemyFocus == enemy) {
+        this.enemyHP.visible = false;
+      }
     }
-
   }
 
 }
