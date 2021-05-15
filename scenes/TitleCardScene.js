@@ -34,7 +34,7 @@ export default class TitleCardScene extends Phaser.Scene {
 
     this.add
       .text(20, 40, "Instructions", {
-        fontFamily: "bebas",
+        fontFamily: "Sans-serif",
         fontSize: 70,
         color: "#ffffff",
       })
@@ -47,7 +47,7 @@ export default class TitleCardScene extends Phaser.Scene {
 
     this.add
       .text(20, 180, help, {
-        fontFamily: "bebas",
+        fontFamily: "Sans-serif",
         fontSize: 30,
         color: "#ffffff",
         lineSpacing: 6,
@@ -55,8 +55,8 @@ export default class TitleCardScene extends Phaser.Scene {
       .setShadow(2, 2, "#333333", 2, false, true);
 
     this.add
-      .text(20, 300, "Press SPACE to play", {
-        fontFamily: "bebas",
+      .text(20, 300, "Wciśnij SPACJĘ aby grać", {
+        fontFamily: "Sans-serif",
         fontSize: 40,
         color: "#ffffff",
       })
