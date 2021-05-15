@@ -5,9 +5,12 @@ export default class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
     this.lives = 5;
-    this.enemies = [];
-    this.gems;
+    this.gemsLoc = [];
+    this.enemies_pos_x = [65, 1132, 1962, 2634, 3667];
+    this.enemies_pos_y = [515, 470, 320, 395, 396];
     this.score = 0;
+    this.last_death_pos_y = 100;
+    this.last_death_pos_x = 50;
   }
 
   preload = () => {
@@ -110,8 +113,9 @@ export default class GameScene extends Phaser.Scene {
       frameRate: 16
     })
 
-    this.player = this.physics.add.sprite(50, 500, "player");
-    this.player.setDepth(1)
+    this.player = this.physics.add.sprite(this.last_death_pos_x, this.last_death_pos_y, "player");
+    this.player.setDepth(1);
+    this.player.anims.play("idle");
     this.player.on("animationrepeat", () => {
       //listen to when an animation completes, then run fly
       this.player.anims.play("idle");
@@ -125,36 +129,49 @@ export default class GameScene extends Phaser.Scene {
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    this.enemies = [];
+    this.enemies = this.physics.add.group();
     //Tworzenie przeciwników
-    let enemy = this.physics.add.sprite(120, 500, "enemy");
+    for (let i = 0; i < this.enemies_pos_x.length; i++) {
+      let enemy = this.physics.add.sprite(this.enemies_pos_x[i], this.enemies_pos_y[i], "enemy");
+      enemy.immovable = true
+      // enemy.hp = new HealthBar(this,enemy.x,enemy.y);
+      enemy.body.gravity.y = 500;
+      enemy.setCollideWorldBounds(true, true, false, false);
+      enemy.body.onWorldBounds = false;
+      this.physics.add.collider(enemy, layer);
+      enemy.setScale(0.7)
+      enemy.setBounce(0.1)
+      this.enemies.add(enemy);
+    }
 
-    enemy.immovable = true
-    // enemy.hp = new HealthBar(this,enemy.x,enemy.y);
-    enemy.body.gravity.y = 500;
-    enemy.setCollideWorldBounds(true, true, false, false);
-    enemy.body.onWorldBounds = false;
-    this.physics.add.collider(enemy, layer);
-    enemy.setScale(0.7)
-    enemy.setBounce(0.1)
+    //this.enemies.push(enemy);
+    console.log(this.lives);
 
-    this.enemies.push(enemy);
+    if (this.lives == 5) {
+      for (let i = 100; i < layer.width; i += 150) this.gemsLoc.push(i);
+    }
 
-    this.gems = this.physics.add.group({
-      key: "gem",
-      repeat: 100,
-      setXY: { x: 100, y: 200, stepX: 150 },
-    });
+    console.log(this.gemsLoc);
+    this.gems = this.physics.add.group();
+
+    //Create gems
+    for (let i = 0; i < this.gemsLoc.length; i++) {
+      let gem = this.physics.add.sprite(this.gemsLoc[i], 200, "gem");
+      this.gems.add(gem);
+    }
 
     this.gems.children.iterate(function (child) {
       child.setBounceY(Phaser.Math.FloatBetween(0.1, 0.3));
       child.setScale(0.3)
     })
 
+    //Gems colliders
+    this.physics.add.collider(this.gems, layer);
+    this.physics.add.collider(this.gems, this.player, this.collectGem);
+
     //Player colliders
     this.physics.add.collider(this.player, layer);
-    this.physics.add.overlap(this.player, enemy, this.dealDamage, null, this);
-
+    this.physics.add.overlap(this.player, this.enemies, this.dealDamage, null, this);
     //Enemy battle system
     this.input.keyboard.on("keydown-Z", () => {
       console.log("KICK")
@@ -166,9 +183,9 @@ export default class GameScene extends Phaser.Scene {
       this.player.anims.play("punch", true);
     });
 
-    //Gems colliders
-    this.physics.add.collider(this.gems, layer);
-    this.physics.add.collider(this.gems, this.player, this.collectGem);
+    this.input.keyboard.on("keydown-Y", () => {
+      console.log("X: " + this.player.x + " Y:" + this.player.y);
+    });
 
     //Score text
     var style = {
@@ -180,6 +197,7 @@ export default class GameScene extends Phaser.Scene {
     this.scoreText = this.add.text(16, 16, "Score:", style);
     this.livesText = this.add.text(16, 32, "Lives:", style);
     this.updateText();
+
     //tekst podążą za kamerą
     this.scoreText.setScrollFactor(0);
     this.livesText.setScrollFactor(0);
@@ -200,9 +218,12 @@ export default class GameScene extends Phaser.Scene {
     } else {
       player.setVelocityX(0);
     }
-
-    if (this.enemies.length != 0)
-      this.enemies.forEach(o => o.anims.play("evil_walk", true));
+    //TODO ANIMACJE WROGA
+    this.enemies.children.iterate(function (child) {
+      child.anims.play("evil_walk", true);
+    })
+    // if (this.enemies.length != 0)
+    //   this.enemies.forEach(o => o.anims.play("evil_walk", true));
 
     //this.physics.moveToObject(this.enemies[0],player,200)
 
@@ -221,8 +242,7 @@ export default class GameScene extends Phaser.Scene {
   };
 
   start = () => {
-    this.lives = 5;
-    this.score = 0;
+    this.resetStats();
     this.scene.start("TitleCardScene");
   };
 
@@ -234,14 +254,18 @@ export default class GameScene extends Phaser.Scene {
     }
     if (this.lives == 0) {
       //reset lives and score
-      this.lives = 5;
-      this.score = 0;
+      this.resetStats();
       this.scene.start("GameOverScene")
-    } if (down && this.lives > 0) {
+    }
+    if (down && this.lives > 0) {
       let lives_left = this.lives
+      // let death_pos_y = this.player.y - 100
+      let death_pos_x = this.player.x - 100
       this.registry.destroy()
       this.events.off()
       this.scene.restart()
+      this.last_death_pos_x = death_pos_x
+      // this.last_death_pos_y = death_pos_y
       this.lives = lives_left
     }
     this.updateText();
@@ -254,7 +278,9 @@ export default class GameScene extends Phaser.Scene {
   }
 
   collectGem = (player, star) => {
-    star.disableBody(true, true);
+    this.gemsLoc.splice(this.gemsLoc.indexOf(star.x), 1);
+    console.log(this.gemsLoc);
+    star.destroy(true, true);
     this.score += 10;
     this.updateText();
     console.log("SCORE: " + this.score, "scoreText: " + this.scoreText.getText)
@@ -263,5 +289,10 @@ export default class GameScene extends Phaser.Scene {
   updateText = () => {
     this.scoreText.setText('Score: ' + this.score);
     this.livesText.setText('Lives: ' + this.lives);
+  }
+
+  resetStats = () => {
+    this.lives = 5;
+    this.score = 0;
   }
 }
