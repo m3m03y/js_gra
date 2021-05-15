@@ -9,6 +9,7 @@ let config = {
   width: 800,
   height: 600,
   backgroundColor: "48a",
+  pixelArt: true,
   physics:{
     default: 'arcade',
     arcade: {
