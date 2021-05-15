@@ -5,12 +5,16 @@ export default class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
     this.lives = 5;
+    this.playerHP;
     this.gemsLoc = [];
+    this.kick_key;
+    this.punch_key;
     this.enemies_pos_x = [65, 1132, 1962, 2634, 3667];
     this.enemies_pos_y = [515, 470, 320, 395, 396];
     this.score = 0;
     this.last_death_pos_y = 100;
     this.last_death_pos_x = 50;
+    this.instruction = "X - PUNCH, Z - KICK, ESC - EXIT";
   }
 
   preload = () => {
@@ -19,6 +23,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.bitmapFont("pixelFont", "assets/font.png", "assets/font.xml");
     this.load.image("platform", "https://labs.phaser.io/assets/sprites/block.png");
     this.load.image('gem', 'https://labs.phaser.io/assets/sprites/gem.png');
+    this.load.image('donut', 'https://labs.phaser.io/assets/sprites/donut.png');
     this.load.spritesheet("enemy", "https://labs.phaser.io/assets/animations/nyan/cat.png", {
       frameWidth: 97,
       frameHeight: 56
@@ -49,6 +54,7 @@ export default class GameScene extends Phaser.Scene {
     var layer = gameMap.createLayer("Layer", tileSet, 0, 0);
     let scale = HEIGHT / layer.height;
     layer.setScale(scale);
+    console.log("SIZE:" + HEIGHT + WIDTH)
     //collidery z podłożem
     gameMap.setCollision([
       31, 32, 33, 34, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 104, 105, 106, 107
@@ -114,6 +120,7 @@ export default class GameScene extends Phaser.Scene {
     })
 
     this.player = this.physics.add.sprite(this.last_death_pos_x, this.last_death_pos_y, "player");
+    this.player.health = 100;
     this.player.setDepth(1);
     this.player.anims.play("idle");
     this.player.on("animationrepeat", () => {
@@ -133,12 +140,13 @@ export default class GameScene extends Phaser.Scene {
     //Tworzenie przeciwników
     for (let i = 0; i < this.enemies_pos_x.length; i++) {
       let enemy = this.physics.add.sprite(this.enemies_pos_x[i], this.enemies_pos_y[i], "enemy");
+      enemy.health = 100;
       enemy.immovable = true
       // enemy.hp = new HealthBar(this,enemy.x,enemy.y);
       enemy.body.gravity.y = 500;
       enemy.setCollideWorldBounds(true, true, false, false);
       enemy.body.onWorldBounds = false;
-      this.physics.add.collider(enemy, layer);
+      this.physics.add.collider(enemy, layer, this.enemyAI);
       enemy.setScale(0.7)
       enemy.setBounce(0.1)
       this.enemies.add(enemy);
@@ -151,7 +159,6 @@ export default class GameScene extends Phaser.Scene {
       for (let i = 100; i < layer.width; i += 150) this.gemsLoc.push(i);
     }
 
-    console.log(this.gemsLoc);
     this.gems = this.physics.add.group();
 
     //Create gems
@@ -165,6 +172,11 @@ export default class GameScene extends Phaser.Scene {
       child.setScale(0.3)
     })
 
+    //4422.75 Y:515.5
+    this.donut = this.physics.add.sprite(4425,510,"donut");
+    this.donut.setScale(0.2);
+    this.physics.add.collider(this.donut, layer);
+    this.physics.add.collider(this.donut, this.player, this.win);
     //Gems colliders
     this.physics.add.collider(this.gems, layer);
     this.physics.add.collider(this.gems, this.player, this.collectGem);
@@ -172,6 +184,7 @@ export default class GameScene extends Phaser.Scene {
     //Player colliders
     this.physics.add.collider(this.player, layer);
     this.physics.add.overlap(this.player, this.enemies, this.dealDamage, null, this);
+
     //Enemy battle system
     this.input.keyboard.on("keydown-Z", () => {
       console.log("KICK")
@@ -183,8 +196,30 @@ export default class GameScene extends Phaser.Scene {
       this.player.anims.play("punch", true);
     });
 
+    this.punch_key = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+    this.kick_key = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    
+
+    this.input.keyboard.on("keydown-I", () => {
+      this.instructionText.visible = true;
+    });
+
+    this.input.keyboard.on("keyup-I", () => {
+      this.instructionText.visible = false;
+    });
+
+    this.input.keyboard.on("keydown-ESC", () => {
+      this.start();
+    });
+    
+    //DEBUG ONLY
     this.input.keyboard.on("keydown-Y", () => {
       console.log("X: " + this.player.x + " Y:" + this.player.y);
+    });    
+    
+    this.input.keyboard.on("keydown-E", () => {
+      this.player.x = 4315;
+      this.player.y = 510;
     });
 
     //Score text
@@ -195,12 +230,16 @@ export default class GameScene extends Phaser.Scene {
     }
 
     this.scoreText = this.add.text(16, 16, "Score:", style);
+    this.playerHP = this.add.text(16,48,"HP:",style)
     this.livesText = this.add.text(16, 32, "Lives:", style);
+    this.instructionText = this.add.text(WIDTH/2 - this.instruction.length, 16, this.instruction, style);
     this.updateText();
 
     //tekst podążą za kamerą
     this.scoreText.setScrollFactor(0);
     this.livesText.setScrollFactor(0);
+    this.instructionText.setScrollFactor(0);
+    this.instructionText.visible = false;
   };
 
   update = () => {
@@ -221,11 +260,10 @@ export default class GameScene extends Phaser.Scene {
     //TODO ANIMACJE WROGA
     this.enemies.children.iterate(function (child) {
       child.anims.play("evil_walk", true);
+      //AI
+      // if(Math.abs(player.x - child.x) < 150)
+      // {child.this.physics.moveToObject(child,player,50)}
     })
-    // if (this.enemies.length != 0)
-    //   this.enemies.forEach(o => o.anims.play("evil_walk", true));
-
-    //this.physics.moveToObject(this.enemies[0],player,200)
 
     if (
       cursors.up.isDown &&
@@ -236,9 +274,9 @@ export default class GameScene extends Phaser.Scene {
       console.log("Jumped");
     }
 
-    if (cursors.space.isDown) {
-      this.start();
-    }
+    // if (cursors.space.isDown) {
+    //   this.start();
+    // }
   };
 
   start = () => {
@@ -248,7 +286,7 @@ export default class GameScene extends Phaser.Scene {
 
   gameOver = (ball, up, down, left, right) => {
     let lives = this.lives;
-    if (down && lives != 0) {
+    if ((this.player.health <=0 || down) && lives != 0) {
       this.lives -= 1;
       console.log(lives);
     }
@@ -257,29 +295,62 @@ export default class GameScene extends Phaser.Scene {
       this.resetStats();
       this.scene.start("GameOverScene")
     }
-    if (down && this.lives > 0) {
+    if ((this.player.health <=0 || down) && this.lives > 0) {
       let lives_left = this.lives
-      // let death_pos_y = this.player.y - 100
       let death_pos_x = this.player.x - 100
       this.registry.destroy()
       this.events.off()
       this.scene.restart()
       this.last_death_pos_x = death_pos_x
-      // this.last_death_pos_y = death_pos_y
+      this.player.healt = 100;
       this.lives = lives_left
     }
     this.updateText();
   };
 
-  dealDamage = () => {
+  dealDamage = (player,enemy) => {
 
 
+    if(Phaser.Input.Keyboard.JustDown(this.kick_key)){
+      console.log("You have damaged the enemy for: 25 HP ")
+      if(enemy.health <=0){
+        enemy.destroy()
+        this.score += 50
+      }else{
+        enemy.health -=35;
+      }
+    }
+    if(Phaser.Input.Keyboard.JustDown(this.punch_key)){
+      console.log("You have damaged the enemy for: 10 HP ")
+      if(enemy.health <=0){
+        enemy.destroy()
+        this.score += 50
+      }else{
+        enemy.health -=25;
+      }
+    }
+    console.log("HP:",enemy.health)
 
+    if(Phaser.Math.Between(0,1) == 1){
+      if(this.player.health <= 0){
+        this.gameOver()
+      }else{
+        this.player.health -=2
+        this.updateText
+      }
+    }else{
+      console.log("Enemy missed ")
+    }
+
+  }
+
+  win = (player, donut) => {
+    console.log("WINNER!!!");
+    this.scene.start("GameOverScene");
   }
 
   collectGem = (player, star) => {
     this.gemsLoc.splice(this.gemsLoc.indexOf(star.x), 1);
-    console.log(this.gemsLoc);
     star.destroy(true, true);
     this.score += 10;
     this.updateText();
@@ -289,10 +360,25 @@ export default class GameScene extends Phaser.Scene {
   updateText = () => {
     this.scoreText.setText('Score: ' + this.score);
     this.livesText.setText('Lives: ' + this.lives);
+    this.playerHP.setText('HP: ' + this.player.health);
   }
 
   resetStats = () => {
     this.lives = 5;
     this.score = 0;
   }
+
+  enemyAI = (enemy, platform) => {
+    
+    if(Phaser.Math.Distance.BetweenPoints(enemy,this.player) < 200 ){
+      if(enemy.body.velocity.x < 0){
+        enemy.flipX=true
+      }else{
+        enemy.flipX = false
+      }
+      this.physics.moveToObject(enemy,this.player,120)
+    }
+
+  }
+
 }
