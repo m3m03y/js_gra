@@ -160,15 +160,11 @@ export default class GameScene extends Phaser.Scene {
       enemy.body.onWorldBounds = false;
       enemy.stepCount = Math.floor(Math.random() * 100);
       this.physics.add.collider(enemy, layer, this.enemyAI);
-      // this.physics.add.collider(enemy, layer, (enemy, layer) => this.enemyAI(enemy, layer));
-      // this.physics.collide(enemy, layer);
-      // this.physics.add.collider(enemy, layer, this.enemyAI, null, this);
       enemy.setScale(0.7)
       enemy.setBounce(0.1)
       this.enemies.add(enemy);
     }
 
-    //this.enemies.push(enemy);
     console.log(this.lives);
     console.log(layer.width + " " + layer.x);
 
