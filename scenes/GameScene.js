@@ -7,7 +7,7 @@ export default class GameScene extends Phaser.Scene {
     this.lives = 3;
     this.BackgroundMusic = true;
     this.playerHP;
-    this.lastAttackTimer = 1000
+    this.lastAttackTimer = 1000;
     this.gemsLoc = [];
     this.healths_pos_x = [641, 1810, 2891];
     this.healths_pos_y = [500, 515, 485];
@@ -20,31 +20,58 @@ export default class GameScene extends Phaser.Scene {
     this.last_death_pos_x = 50;
     this.instruction = "X - PUNCH, Z - KICK, ESC - EXIT";
     this.enemyFocus;
+    this.isReset = false;
   }
+
+  init = (data) => {
+    console.log(`Init with reset = ${data.isReset}`);
+    this.isReset = data.isReset;
+    if (data.isReset) {
+      this.resetStats();
+      data.isReset = false;
+    }
+  };
 
   preload = () => {
     this.load.crossOrigin = "anonymous";
 
     this.load.bitmapFont("pixelFont", "assets/font.png", "assets/font.xml");
-    this.load.image("platform", "https://labs.phaser.io/assets/sprites/block.png");
-    this.load.image('gem', 'https://labs.phaser.io/assets/sprites/gem.png');
-    this.load.image('healthPickUp', 'https://labs.phaser.io/assets/sprites/apple.png');
-    this.load.image('winKey', 'https://labs.phaser.io/assets/sprites/donut.png');
-    this.load.spritesheet("enemy", "https://labs.phaser.io/assets/animations/nyan/cat.png", {
-      frameWidth: 97,
-      frameHeight: 56
-    });
+    this.load.image(
+      "platform",
+      "https://labs.phaser.io/assets/sprites/block.png"
+    );
+    this.load.image("gem", "https://labs.phaser.io/assets/sprites/gem.png");
+    this.load.image(
+      "healthPickUp",
+      "https://labs.phaser.io/assets/sprites/apple.png"
+    );
+    this.load.image(
+      "winKey",
+      "https://labs.phaser.io/assets/sprites/donut.png"
+    );
+    this.load.spritesheet(
+      "enemy",
+      "https://labs.phaser.io/assets/animations/nyan/cat.png",
+      {
+        frameWidth: 97,
+        frameHeight: 56,
+      }
+    );
 
     this.load.tilemapTiledJSON("gameMap", "../assets/maps/platform.json");
     this.load.image("gameTiles", "../assets/tiles/platformer_tiles.png", {
       frameWidth: 16,
-      frameHeight: 16
+      frameHeight: 16,
     });
 
-    this.load.spritesheet("player", "https://labs.phaser.io/assets/animations/brawler48x48.png", {
-      frameWidth: 48,
-      frameHeight: 49,
-    });
+    this.load.spritesheet(
+      "player",
+      "https://labs.phaser.io/assets/animations/brawler48x48.png",
+      {
+        frameWidth: 48,
+        frameHeight: 49,
+      }
+    );
   };
 
   create = () => {
@@ -57,16 +84,14 @@ export default class GameScene extends Phaser.Scene {
     back.setScrollFactor(0);
 
     var gameMap = this.add.tilemap("gameMap");
-    var tileSet = gameMap.addTilesetImage(
-      "platformer_tiles",
-      "gameTiles"
-    );
+    var tileSet = gameMap.addTilesetImage("platformer_tiles", "gameTiles");
     var layer = gameMap.createLayer("Layer", tileSet, 0, 0);
     let scale = HEIGHT / layer.height;
     layer.setScale(scale);
     //collidery z podłożem
     gameMap.setCollision([
-      31, 32, 33, 34, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 104, 105, 106, 107
+      31, 32, 33, 34, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 104,
+      105, 106, 107,
     ]);
 
     this.cameras.main.setBounds(0, 0, layer.width * scale, HEIGHT);
@@ -123,12 +148,17 @@ export default class GameScene extends Phaser.Scene {
     this.anims.create({
       key: "evil_walk",
       frames: this.anims.generateFrameNumbers("enemy", {
-        start: 0, end: 5
+        start: 0,
+        end: 5,
       }),
-      frameRate: 16
-    })
+      frameRate: 16,
+    });
 
-    this.player = this.physics.add.sprite(this.last_death_pos_x, this.last_death_pos_y, "player");
+    this.player = this.physics.add.sprite(
+      this.last_death_pos_x,
+      this.last_death_pos_y,
+      "player"
+    );
     this.player.health = 100;
     this.player.setDepth(1);
     this.player.anims.play("idle");
@@ -136,7 +166,6 @@ export default class GameScene extends Phaser.Scene {
       //listen to when an animation completes, then run fly
       this.player.anims.play("idle");
     });
-
 
     this.player.setCollideWorldBounds(true, true, false, true);
     this.player.body.onWorldBounds = true;
@@ -148,26 +177,32 @@ export default class GameScene extends Phaser.Scene {
     this.enemies = this.physics.add.group();
     //Tworzenie przeciwników
     for (let i = 0; i < this.enemies_pos_x.length; i++) {
-      let enemy = this.physics.add.sprite(this.enemies_pos_x[i], this.enemies_pos_y[i], "enemy");
+      let enemy = this.physics.add.sprite(
+        this.enemies_pos_x[i],
+        this.enemies_pos_y[i],
+        "enemy"
+      );
       enemy.health = 100;
-      enemy.immovable = true
+      enemy.immovable = true;
       enemy.body.gravity.y = 500;
       enemy.setCollideWorldBounds(true, true, false, false);
       enemy.body.onWorldBounds = false;
       this.physics.add.collider(enemy, layer, this.enemyAI);
-      enemy.setScale(0.7)
-      enemy.setBounce(0.1)
+      enemy.setScale(0.7);
+      enemy.setBounce(0.1);
       this.enemies.add(enemy);
     }
 
     //this.enemies.push(enemy);
-    console.log(this.lives);
-    console.log(layer.width + " " + layer.x);
+    // console.log(this.lives);
+    // console.log(layer.width + " " + layer.x);
 
-    if (this.lives == this.baseLives) {
+    if (this.isReset) {
       this.healths_pos_x = [641, 1810, 2891];
       this.healths_pos_y = [500, 515, 485];
       for (let i = 100; i < layer.width - 200; i += 150) this.gemsLoc.push(i);
+      console.log(`Stworzono ${this.gemsLoc.length} gemów`);
+      this.isReset = true;
     }
 
     //Key to win
@@ -178,17 +213,25 @@ export default class GameScene extends Phaser.Scene {
     //Health pickups
     this.healthPickups = this.physics.add.group();
     for (let i = 0; i < this.healths_pos_x.length; i++) {
-      let health = this.physics.add.sprite(this.healths_pos_x[i], this.healths_pos_y[i], "healthPickUp");
+      let health = this.physics.add.sprite(
+        this.healths_pos_x[i],
+        this.healths_pos_y[i],
+        "healthPickUp"
+      );
       this.healthPickups.add(health);
     }
 
     this.healthPickups.children.iterate(function (child) {
       child.setBounceY(Phaser.Math.FloatBetween(0.1, 0.3));
-      child.setScale(0.3)
-    })
+      child.setScale(0.3);
+    });
 
     this.physics.add.collider(this.healthPickups, layer);
-    this.physics.add.collider(this.healthPickups, this.player, this.collectHealth);
+    this.physics.add.collider(
+      this.healthPickups,
+      this.player,
+      this.collectHealth
+    );
 
     //Create gems
     this.gems = this.physics.add.group();
@@ -199,8 +242,8 @@ export default class GameScene extends Phaser.Scene {
 
     this.gems.children.iterate(function (child) {
       child.setBounceY(Phaser.Math.FloatBetween(0.1, 0.3));
-      child.setScale(0.3)
-    })
+      child.setScale(0.3);
+    });
 
     //Gems colliders
     this.physics.add.collider(this.gems, layer);
@@ -208,7 +251,13 @@ export default class GameScene extends Phaser.Scene {
 
     //Player colliders
     this.physics.add.collider(this.player, layer);
-    this.physics.add.overlap(this.player, this.enemies, this.dealDamage, null, this);
+    this.physics.add.overlap(
+      this.player,
+      this.enemies,
+      this.dealDamage,
+      null,
+      this
+    );
 
     //Enemy battle system
     this.input.keyboard.on("keydown-Z", () => {
@@ -219,9 +268,12 @@ export default class GameScene extends Phaser.Scene {
       this.player.anims.play("punch", true);
     });
 
-    this.punch_key = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
-    this.kick_key = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
-
+    this.punch_key = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.Z
+    );
+    this.kick_key = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.X
+    );
 
     this.input.keyboard.on("keydown-I", () => {
       this.instructionText.visible = true;
@@ -250,14 +302,19 @@ export default class GameScene extends Phaser.Scene {
       fontFamily: "Sans-serif",
       fontSize: "24px",
       fill: "#000000",
-      align: "center"
-    }
+      align: "center",
+    };
 
     this.scoreText = this.add.text(16, 16, "Score:", style);
     this.playerHP = this.add.text(16, 40, "HP:", style);
     this.enemyHP = this.add.text(16, 100, "Enemy HP:", style);
     this.livesText = this.add.text(16, 64, "Lives:", style);
-    this.instructionText = this.add.text(WIDTH / 2, 570, this.instruction, style);
+    this.instructionText = this.add.text(
+      WIDTH / 2,
+      570,
+      this.instruction,
+      style
+    );
     this.updateText();
 
     //tekst podążą za kamerą
@@ -271,7 +328,6 @@ export default class GameScene extends Phaser.Scene {
   };
 
   update = () => {
-
     let cursors = this.cursors;
     let player = this.player;
     if (cursors.left.isDown) {
@@ -288,7 +344,7 @@ export default class GameScene extends Phaser.Scene {
     //TODO ANIMACJE WROGA
     this.enemies.children.iterate(function (child) {
       child.anims.play("evil_walk", true);
-    })
+    });
 
     if (
       cursors.up.isDown &&
@@ -296,12 +352,11 @@ export default class GameScene extends Phaser.Scene {
     ) {
       player.setVelocityY(-300);
       player.anims.play("jump", true);
-      console.log("Jumped");
+      //console.log("Jumped");
     }
   };
 
   start = () => {
-    this.resetStats();
     this.scene.start("TitleCardScene");
   };
 
@@ -313,27 +368,28 @@ export default class GameScene extends Phaser.Scene {
     }
     if (this.lives == 0) {
       //reset lives and score
-      this.resetStats();
-      this.scene.start("GameOverScene", { score: this.score, isWin: false, lives: this.lives })
-      this.last_death_pos_x = 50
+      this.scene.start("GameOverScene", {
+        score: this.score,
+        isWin: false,
+        lives: this.lives,
+      });
+      this.last_death_pos_x = 50;
       this.BackgroundMusic = true;
     }
     if ((this.player.health <= 0 || down) && this.lives > 0) {
-      let lives_left = this.lives
-      let death_pos_x = this.player.x - 100
-      this.registry.destroy()
-      this.events.off()
-      this.scene.restart()
-      this.last_death_pos_x = death_pos_x
+      let lives_left = this.lives;
+      let death_pos_x = this.player.x - 100;
+      this.registry.destroy();
+      this.events.off();
+      this.scene.restart();
+      this.last_death_pos_x = death_pos_x;
       this.player.healt = 100;
-      this.lives = lives_left
+      this.lives = lives_left;
     }
     this.updateText();
   };
 
   dealDamage = (player, enemy) => {
-
-
     if (Phaser.Input.Keyboard.JustDown(this.kick_key)) {
       if (enemy.health <= 40) {
         if (enemy == this.enemyFocus) {
@@ -341,7 +397,7 @@ export default class GameScene extends Phaser.Scene {
           this.enemyHP.visible = false;
         }
         enemy.destroy();
-        this.score += 50
+        this.score += 50;
       } else {
         enemy.health -= 40;
       }
@@ -352,38 +408,40 @@ export default class GameScene extends Phaser.Scene {
           this.enemyFocus = undefined;
           this.enemyHP.visible = false;
         }
-        enemy.destroy()
-        this.score += 50
+        enemy.destroy();
+        this.score += 50;
       } else {
         enemy.health -= 20;
       }
     }
 
     if (this.time.now - this.lastAttackTimer > 1000) {
-      this.player.health -= Phaser.Math.Between(0, 30)
-      this.lastAttackTimer = this.time.now
-      this.updateText()
+      this.player.health -= Phaser.Math.Between(0, 30);
+      this.lastAttackTimer = this.time.now;
+      this.updateText();
       if (this.player.health <= 0) {
         this.gameOver();
       }
     }
-
-  }
+  };
 
   win = (player, winKey) => {
     console.log("WINNER!!!");
-    this.scene.start("GameOverScene", { score: this.score, isWin: true, lives: this.lives });
-    this.resetStats();
+    this.scene.start("GameOverScene", {
+      score: this.score,
+      isWin: true,
+      lives: this.lives,
+    });
     this.BackgroundMusic = true;
-  }
+  };
 
   collectGem = (player, gem) => {
     this.gemsLoc.splice(this.gemsLoc.indexOf(gem.x), 1);
     gem.destroy(true, true);
     this.score += 10;
     this.updateText();
-    console.log("SCORE: " + this.score, "scoreText: " + this.scoreText.getText)
-  }
+    //console.log("SCORE: " + this.score, "scoreText: " + this.scoreText.getText)
+  };
 
   collectHealth = (player, health) => {
     this.healths_pos_x.splice(this.healths_pos_x.indexOf(health.x), 1);
@@ -395,31 +453,32 @@ export default class GameScene extends Phaser.Scene {
       this.player.health = 100;
       this.lives += 1;
     }
-    this.updateText()
-  }
+    this.updateText();
+  };
 
   updateText = () => {
-    this.scoreText.setText('Score: ' + this.score);
-    this.livesText.setText('Lives: ' + this.lives);
-    this.playerHP.setText('HP: ' + this.player.health + "/100");
-  }
+    this.scoreText.setText("Score: " + this.score);
+    this.livesText.setText("Lives: " + this.lives);
+    this.playerHP.setText("HP: " + this.player.health + "/100");
+  };
 
   resetStats = () => {
+    console.log("Reset stats");
+    this.gemsLoc = [];
     this.lives = this.baseLives;
     this.score = 0;
     this.last_death_pos_x = 50;
     this.enemyFocus = undefined;
-  }
+  };
 
   enemyAI = (enemy, platform) => {
-
     if (Phaser.Math.Distance.BetweenPoints(enemy, this.player) < 200) {
       if (enemy.body.velocity.x < 0) {
-        enemy.flipX = true
+        enemy.flipX = true;
       } else {
-        enemy.flipX = false
+        enemy.flipX = false;
       }
-      this.physics.moveToObject(enemy, this.player, 120)
+      this.physics.moveToObject(enemy, this.player, 120);
       if (this.enemyFocus == undefined) {
         this.enemyFocus = enemy;
       }
@@ -432,6 +491,5 @@ export default class GameScene extends Phaser.Scene {
         this.enemyHP.visible = false;
       }
     }
-  }
-
+  };
 }

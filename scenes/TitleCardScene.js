@@ -12,13 +12,16 @@ export default class TitleCardScene extends Phaser.Scene {
       '@font-face { font-family: "bebas"; src: url("assets/fonts/ttf/bebas.ttf") format("truetype"); }',
       0
     );
-  }
+  };
 
   preload = () => {
     this.load.crossOrigin = "anonymous";
     this.load.image("background", "../assets/background3.png");
-    this.load.audio('jungle',['https://labs.phaser.io/assets/audio/Dafunk%20-%20Hardcore%20Power%20(We%20Believe%20In%20Goa%20-%20Remix).ogg','https://labs.phaser.io/assets/audio/Dafunk%20-%20Hardcore%20Power%20(We%20Believe%20In%20Goa%20-%20Remix).m4a'])
-  }
+    this.load.audio("jungle", [
+      "https://labs.phaser.io/assets/audio/Dafunk%20-%20Hardcore%20Power%20(We%20Believe%20In%20Goa%20-%20Remix).ogg",
+      "https://labs.phaser.io/assets/audio/Dafunk%20-%20Hardcore%20Power%20(We%20Believe%20In%20Goa%20-%20Remix).m4a",
+    ]);
+  };
 
   create = () => {
     var back = this.add.tileSprite(0, 0, WIDTH, HEIGHT, "background");
@@ -43,7 +46,7 @@ export default class TitleCardScene extends Phaser.Scene {
 
     var help = [
       "Jest to ekran początkowy do gry Arcadowej",
-      'wykonanej we frameworku Phaser.',
+      "wykonanej we frameworku Phaser.",
     ];
 
     this.add
@@ -64,10 +67,9 @@ export default class TitleCardScene extends Phaser.Scene {
       .setShadow(2, 2, "#333333", 2, false, true);
 
     this.input.keyboard.on("keydown-SPACE", this.start, this);
-  }
-
+  };
 
   start = () => {
-    this.scene.start("GameScene");
-  }
+    this.scene.start("GameScene", { isReset: true });
+  };
 }
