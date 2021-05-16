@@ -8,16 +8,16 @@ export default class TitleCardScene extends Phaser.Scene {
   init = () => {
     let element = document.createElement("style");
     document.head.appendChild(element);
-    element.sheet.insertRule(
-      '@font-face { font-family: "bebas"; src: url("assets/fonts/ttf/bebas.ttf") format("truetype"); }',
-      0
-    );
+    // element.sheet.insertRule(
+    //   '@font-face { font-family: "bebas"; src: url("assets/fonts/ttf/bebas.ttf") format("truetype"); }',
+    //   0
+    // );
   }
 
   preload = () => {
     this.load.crossOrigin = "anonymous";
     this.load.image("background", "../assets/background3.png");
-    this.load.audio('jungle',['https://labs.phaser.io/assets/audio/Dafunk%20-%20Hardcore%20Power%20(We%20Believe%20In%20Goa%20-%20Remix).ogg','https://labs.phaser.io/assets/audio/Dafunk%20-%20Hardcore%20Power%20(We%20Believe%20In%20Goa%20-%20Remix).m4a'])
+    // this.load.audio('jungle',['https://labs.phaser.io/assets/audio/Dafunk%20-%20Hardcore%20Power%20(We%20Believe%20In%20Goa%20-%20Remix).ogg','https://labs.phaser.io/assets/audio/Dafunk%20-%20Hardcore%20Power%20(We%20Believe%20In%20Goa%20-%20Remix).m4a'])
   }
 
   create = () => {

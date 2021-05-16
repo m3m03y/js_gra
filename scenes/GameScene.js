@@ -17,9 +17,11 @@ export default class GameScene extends Phaser.Scene {
     this.enemies_pos_y = [515, 470, 320, 395, 380];
     this.score = 0;
     this.last_death_pos_y = 100;
-    this.last_death_pos_x = 50;
+    this.last_death_pos_x = 200;
     this.instruction = "X - PUNCH, Z - KICK, ESC - EXIT";
     this.enemyFocus;
+    this.layers;
+    this.stepLimit = 200;
   }
 
   preload = () => {
@@ -61,7 +63,8 @@ export default class GameScene extends Phaser.Scene {
       "platformer_tiles",
       "gameTiles"
     );
-    var layer = gameMap.createLayer("Layer", tileSet, 0, 0);
+    this.layers = gameMap.createLayer("Layer", tileSet, 0, 0);
+    var layer = this.layers;
     let scale = HEIGHT / layer.height;
     layer.setScale(scale);
     //collidery z podłożem
@@ -154,7 +157,11 @@ export default class GameScene extends Phaser.Scene {
       enemy.body.gravity.y = 500;
       enemy.setCollideWorldBounds(true, true, false, false);
       enemy.body.onWorldBounds = false;
+      enemy.stepCount = Math.floor(Math.random() * 100);
       this.physics.add.collider(enemy, layer, this.enemyAI);
+      // this.physics.add.collider(enemy, layer, (enemy, layer) => this.enemyAI(enemy, layer));
+      // this.physics.collide(enemy, layer);
+      // this.physics.add.collider(enemy, layer, this.enemyAI, null, this);
       enemy.setScale(0.7)
       enemy.setBounce(0.1)
       this.enemies.add(enemy);
@@ -298,6 +305,21 @@ export default class GameScene extends Phaser.Scene {
       player.anims.play("jump", true);
       console.log("Jumped");
     }
+
+    // enemies.forEach(function (enemy) {
+    //   enemy.stepCount++;
+    //   console.log(enemy.stepCount)
+    //   if (enemy.stepCount > this.stepLimit) {
+    //     if(enemy.body.velocity.x > 0) {
+    //       enemy.setVelocityX(-30);
+    //       enemy.flipX = false; 
+    //     } else if(enemy.body.velocity.x < 0) {
+    //       enemy.setVelocityX(30);
+    //       enemy.flipX = true;
+    //     }
+    //     enemy.stepCount = 0;
+    //   }}, this);
+    // this.physics.arcade.collide(this.enemies, this.layers, this.enemyAI, null, this);
   };
 
   start = () => {
@@ -412,7 +434,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   enemyAI = (enemy, platform) => {
-
+    enemy.setVelocityX(30);
     if (Phaser.Math.Distance.BetweenPoints(enemy, this.player) < 200) {
       if (enemy.body.velocity.x < 0) {
         enemy.flipX = true
@@ -428,6 +450,26 @@ export default class GameScene extends Phaser.Scene {
         this.enemyHP.visible = true;
       }
     } else {
+      enemy.stepCount++;
+      if (enemy.stepCount > 200) {
+        enemy.body.velocity.x *= -1;
+        enemy.flipX = !enemy.flipX;
+        enemy.stepCount = 0;
+      }
+
+      // if (Math.random() > 0.98) {
+        
+      // }
+
+      // if (enemy.body.velocity.x > 0 && enemy.right > platform.right) {
+      //   enemy.flipX = true;
+      //   enemy.setVelocityX(-50);
+      // } else if (enemy.body.velocity.x < 0 && enemy.left < platform.left) {
+      //   enemy.flipX = false;
+      //   enemy.setVelocityX(50);
+      // } else {
+      //   enemy.setVelocityX(20); 
+      // }
       if (this.enemyFocus == enemy) {
         this.enemyHP.visible = false;
       }
