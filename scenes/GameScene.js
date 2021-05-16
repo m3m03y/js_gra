@@ -154,6 +154,7 @@ export default class GameScene extends Phaser.Scene {
       let enemy = this.physics.add.sprite(this.enemies_pos_x[i], this.enemies_pos_y[i], "enemy");
       enemy.health = 100;
       enemy.immovable = true
+      enemy.turnAround = true;
       enemy.body.gravity.y = 500;
       enemy.setCollideWorldBounds(true, true, false, false);
       enemy.body.onWorldBounds = false;
@@ -305,21 +306,6 @@ export default class GameScene extends Phaser.Scene {
       player.anims.play("jump", true);
       console.log("Jumped");
     }
-
-    // enemies.forEach(function (enemy) {
-    //   enemy.stepCount++;
-    //   console.log(enemy.stepCount)
-    //   if (enemy.stepCount > this.stepLimit) {
-    //     if(enemy.body.velocity.x > 0) {
-    //       enemy.setVelocityX(-30);
-    //       enemy.flipX = false; 
-    //     } else if(enemy.body.velocity.x < 0) {
-    //       enemy.setVelocityX(30);
-    //       enemy.flipX = true;
-    //     }
-    //     enemy.stepCount = 0;
-    //   }}, this);
-    // this.physics.arcade.collide(this.enemies, this.layers, this.enemyAI, null, this);
   };
 
   start = () => {
@@ -433,8 +419,9 @@ export default class GameScene extends Phaser.Scene {
     this.enemyFocus = undefined;
   }
 
+  turnAround = true;
+
   enemyAI = (enemy, platform) => {
-    enemy.setVelocityX(30);
     if (Phaser.Math.Distance.BetweenPoints(enemy, this.player) < 200) {
       if (enemy.body.velocity.x < 0) {
         enemy.flipX = true
@@ -450,26 +437,28 @@ export default class GameScene extends Phaser.Scene {
         this.enemyHP.visible = true;
       }
     } else {
-      enemy.stepCount++;
-      if (enemy.stepCount > 200) {
-        enemy.body.velocity.x *= -1;
-        enemy.flipX = !enemy.flipX;
-        enemy.stepCount = 0;
+      var i = platform.index;
+      if (i == 0 || i == 7 || i == 44 || i == 105 || i == 108) {
+        if(this.turnAround) {
+          enemy.body.velocity.x *= -1;
+          enemy.flipX = !enemy.flipX;
+          this.turnAround = false;
+          setTimeout(() => {this.turnAround = true;}, 1000);
+        }
       }
 
-      // if (Math.random() > 0.98) {
-        
-      // }
-
-      // if (enemy.body.velocity.x > 0 && enemy.right > platform.right) {
-      //   enemy.flipX = true;
-      //   enemy.setVelocityX(-50);
-      // } else if (enemy.body.velocity.x < 0 && enemy.left < platform.left) {
-      //   enemy.flipX = false;
-      //   enemy.setVelocityX(50);
-      // } else {
-      //   enemy.setVelocityX(20); 
-      // }
+      if (Math.random() > 0.995) {
+        if (enemy.body.velocity.x > 0) {
+          enemy.setVelocityX(-30);
+          enemy.flipX = true;
+        } else if (enemy.body.velocity.x < 0) {
+          enemy.setVelocityX(30);
+          enemy.flipX = false; 
+        } else {
+          enemy.setVelocityX(30); 
+          enemy.flipX = false;
+        }
+      }
       if (this.enemyFocus == enemy) {
         this.enemyHP.visible = false;
       }
