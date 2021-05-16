@@ -422,6 +422,7 @@ export default class GameScene extends Phaser.Scene {
   turnAround = true;
 
   enemyAI = (enemy, platform) => {
+    //jeśli gracz się zbliża
     if (Phaser.Math.Distance.BetweenPoints(enemy, this.player) < 200) {
       if (enemy.body.velocity.x < 0) {
         enemy.flipX = true
@@ -436,7 +437,7 @@ export default class GameScene extends Phaser.Scene {
         this.enemyHP.setText(`Enemy HP: ${enemy.health}/100`);
         this.enemyHP.visible = true;
       }
-    } else {
+    } else { //jesli krawędź
       var i = platform.index;
       if (i == 0 || i == 7 || i == 44 || i == 105 || i == 108) {
         if(this.turnAround) {
@@ -446,7 +447,7 @@ export default class GameScene extends Phaser.Scene {
           setTimeout(() => {this.turnAround = true;}, 1000);
         }
       }
-
+      // losowe poruszanie się po platformie
       if (Math.random() > 0.995) {
         if (enemy.body.velocity.x > 0) {
           enemy.setVelocityX(-30);
@@ -459,6 +460,24 @@ export default class GameScene extends Phaser.Scene {
           enemy.flipX = false;
         }
       }
+      //skakanie losowe
+      if (Math.random() > 0.995) {
+        enemy.body.velocity.y = -200;
+        setTimeout(() => {
+          enemy.body.velocity.y = 0;
+          if(enemy.body.velocity.x == 0)
+          {
+            if (enemy.flipX == false) {
+              enemy.setVelocityX(30);
+              enemy.flipX = false;
+            } else {
+              enemy.setVelocityX(-30);
+              enemy.flipX = true;
+            }
+          } 
+        }, 500);
+      }
+
       if (this.enemyFocus == enemy) {
         this.enemyHP.visible = false;
       }
