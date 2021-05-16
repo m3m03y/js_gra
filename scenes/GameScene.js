@@ -17,10 +17,12 @@ export default class GameScene extends Phaser.Scene {
     this.enemies_pos_y = [515, 470, 320, 395, 380];
     this.score = 0;
     this.last_death_pos_y = 100;
-    this.last_death_pos_x = 50;
+    this.last_death_pos_x = 200;
     this.instruction = "X - PUNCH, Z - KICK, ESC - EXIT";
     this.enemyFocus;
     this.isReset = false;
+    this.layers;
+    this.stepLimit = 200;
   }
 
   init = (data) => {
@@ -84,8 +86,12 @@ export default class GameScene extends Phaser.Scene {
     back.setScrollFactor(0);
 
     var gameMap = this.add.tilemap("gameMap");
-    var tileSet = gameMap.addTilesetImage("platformer_tiles", "gameTiles");
-    var layer = gameMap.createLayer("Layer", tileSet, 0, 0);
+    var tileSet = gameMap.addTilesetImage(
+      "platformer_tiles",
+      "gameTiles"
+    );
+    this.layers = gameMap.createLayer("Layer", tileSet, 0, 0);
+    var layer = this.layers;
     let scale = HEIGHT / layer.height;
     layer.setScale(scale);
     //collidery z podłożem
@@ -183,17 +189,18 @@ export default class GameScene extends Phaser.Scene {
         "enemy"
       );
       enemy.health = 100;
-      enemy.immovable = true;
+      enemy.immovable = true
+      enemy.turnAround = true;
       enemy.body.gravity.y = 500;
       enemy.setCollideWorldBounds(true, true, false, false);
       enemy.body.onWorldBounds = false;
+      enemy.stepCount = Math.floor(Math.random() * 100);
       this.physics.add.collider(enemy, layer, this.enemyAI);
       enemy.setScale(0.7);
       enemy.setBounce(0.1);
       this.enemies.add(enemy);
     }
 
-    //this.enemies.push(enemy);
     // console.log(this.lives);
     // console.log(layer.width + " " + layer.x);
 
@@ -471,7 +478,10 @@ export default class GameScene extends Phaser.Scene {
     this.enemyFocus = undefined;
   };
 
+  turnAround = true;
+
   enemyAI = (enemy, platform) => {
+    //jeśli gracz się zbliża
     if (Phaser.Math.Distance.BetweenPoints(enemy, this.player) < 200) {
       if (enemy.body.velocity.x < 0) {
         enemy.flipX = true;
@@ -486,7 +496,47 @@ export default class GameScene extends Phaser.Scene {
         this.enemyHP.setText(`Enemy HP: ${enemy.health}/100`);
         this.enemyHP.visible = true;
       }
-    } else {
+    } else { //jesli krawędź
+      var i = platform.index;
+      if (i == 0 || i == 7 || i == 44 || i == 105 || i == 108) {
+        if(this.turnAround) {
+          enemy.body.velocity.x *= -1;
+          enemy.flipX = !enemy.flipX;
+          this.turnAround = false;
+          setTimeout(() => {this.turnAround = true;}, 1000);
+        }
+      }
+      // losowe poruszanie się po platformie
+      if (Math.random() > 0.995) {
+        if (enemy.body.velocity.x > 0) {
+          enemy.setVelocityX(-30);
+          enemy.flipX = true;
+        } else if (enemy.body.velocity.x < 0) {
+          enemy.setVelocityX(30);
+          enemy.flipX = false; 
+        } else {
+          enemy.setVelocityX(30); 
+          enemy.flipX = false;
+        }
+      }
+      //skakanie losowe
+      if (Math.random() > 0.995) {
+        enemy.body.velocity.y = -200;
+        setTimeout(() => {
+          enemy.body.velocity.y = 0;
+          if(enemy.body.velocity.x == 0)
+          {
+            if (enemy.flipX == false) {
+              enemy.setVelocityX(30);
+              enemy.flipX = false;
+            } else {
+              enemy.setVelocityX(-30);
+              enemy.flipX = true;
+            }
+          } 
+        }, 500);
+      }
+
       if (this.enemyFocus == enemy) {
         this.enemyHP.visible = false;
       }
