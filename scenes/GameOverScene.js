@@ -31,7 +31,7 @@ export default class GameOverScene extends Phaser.Scene {
     back.setOrigin(0);
 
     this.add
-      .text(200, 140, card, {
+      .text(isWin ? 300 : 250, 140, card, {
         fontFamily: "Sans-serif",
         fontSize: 42,
         color: "#ff0000",
@@ -39,7 +39,7 @@ export default class GameOverScene extends Phaser.Scene {
       .setShadow(2, 2, "#333333", 2, false, true);
 
     this.add
-      .text(40, 300, info, {
+      .text(40, 400, info, {
         fontFamily: "Sans-serif",
         fontSize: 24,
         color: "#ffffff",
@@ -47,7 +47,7 @@ export default class GameOverScene extends Phaser.Scene {
       .setShadow(2, 2, "#333333", 2, false, true);
 
     this.add
-      .text(40, 500, "Wciśnij SPACJĘ aby grać", {
+      .text(40, 500, "Wciśnij SPACJĘ aby zagrać ponownie", {
         fontFamily: "Sans-serif",
         fontSize: 40,
         color: "#ffffff",
