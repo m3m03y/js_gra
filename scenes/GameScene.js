@@ -80,7 +80,7 @@ export default class GameScene extends Phaser.Scene {
 
   create = () => {
     if (this.BackgroundMusic) {
-      // this.sound.play('jungle', { volume: 0.1 })
+      this.sound.play('jungle', { volume: 0.1 })
       this.BackgroundMusic = false;
     }
     var back = this.add.tileSprite(0, -40, WIDTH, HEIGHT, "background");
