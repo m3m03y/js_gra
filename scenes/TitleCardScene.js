@@ -8,10 +8,6 @@ export default class TitleCardScene extends Phaser.Scene {
   init = () => {
     let element = document.createElement("style");
     document.head.appendChild(element);
-    element.sheet.insertRule(
-      '@font-face { font-family: "bebas"; src: url("assets/fonts/ttf/bebas.ttf") format("truetype"); }',
-      0
-    );
   };
 
   preload = () => {
@@ -29,7 +25,7 @@ export default class TitleCardScene extends Phaser.Scene {
 
     this.add
       .text(720, 0, "G\n R\nA\n n\na\n J\nS", {
-        fontFamily: "bebas",
+        fontFamily: "Sans-serif",
         fontSize: 74,
         color: "#ffffff",
         lineSpacing: -10,

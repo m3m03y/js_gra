@@ -27,7 +27,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   init = (data) => {
-    console.log(`Init with reset = ${data.isReset}`);
+    if (this.debug) console.log(`Init with reset = ${data.isReset}`);
     console.log(this.debug ? "Debug mode" : "Normal mode");
     this.isReset = data.isReset;
     if (data.isReset) {
@@ -80,7 +80,7 @@ export default class GameScene extends Phaser.Scene {
 
   create = () => {
     if (this.BackgroundMusic) {
-      this.sound.play('jungle', { volume: 0.1 })
+      //this.sound.play('jungle', { volume: 0.1 })
       this.BackgroundMusic = false;
     }
     var back = this.add.tileSprite(0, -40, WIDTH, HEIGHT, "background");
@@ -529,6 +529,7 @@ export default class GameScene extends Phaser.Scene {
       if (Math.random() > 0.995) {
         enemy.body.velocity.y = -200;
         setTimeout(() => {
+          if (enemy.body == undefined) return
           enemy.body.velocity.y = 0;
           if(enemy.body.velocity.x == 0)
           {

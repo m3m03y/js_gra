@@ -12,9 +12,6 @@ export default class GameOverScene extends Phaser.Scene {
     this.lives = data.lives;
     this.score = data.score + 50 * this.lives;
     this.isWin = data.isWin;
-    console.log(
-      `Życia: ${this.lives} Wynik: ${this.score} Czy wygrana: ${this.isWin}`
-    );
   };
 
   preload = () => {
