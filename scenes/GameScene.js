@@ -23,10 +23,12 @@ export default class GameScene extends Phaser.Scene {
     this.isReset = false;
     this.layers;
     this.stepLimit = 200;
+    this.debug = false;
   }
 
   init = (data) => {
     console.log(`Init with reset = ${data.isReset}`);
+    console.log(this.debug ? "Debug mode" : "Normal mode");
     this.isReset = data.isReset;
     if (data.isReset) {
       this.resetStats();
@@ -200,15 +202,16 @@ export default class GameScene extends Phaser.Scene {
       enemy.setBounce(0.1);
       this.enemies.add(enemy);
     }
-
-    // console.log(this.lives);
-    // console.log(layer.width + " " + layer.x);
+    if(this.debug) {
+      console.log("Lives: " + this.lives);
+      console.log(layer.width + " " + layer.x);
+    }
 
     if (this.isReset) {
       this.healths_pos_x = [641, 1810, 2891];
       this.healths_pos_y = [500, 515, 485];
       for (let i = 100; i < layer.width - 200; i += 150) this.gemsLoc.push(i);
-      console.log(`Stworzono ${this.gemsLoc.length} gemów`);
+      if(this.debug) console.log(`Stworzono ${this.gemsLoc.length} gemów`);
       this.isReset = true;
     }
 
@@ -295,14 +298,16 @@ export default class GameScene extends Phaser.Scene {
     });
 
     //DEBUG ONLY
-    this.input.keyboard.on("keydown-Y", () => {
-      console.log("X: " + this.player.x + " Y:" + this.player.y);
-    });
-
-    this.input.keyboard.on("keydown-E", () => {
-      this.player.x = 4315;
-      this.player.y = 510;
-    });
+    if (this.debug) {
+      this.input.keyboard.on("keydown-Y", () => {
+        console.log("X: " + this.player.x + " Y:" + this.player.y);
+      });
+  
+      this.input.keyboard.on("keydown-E", () => {
+        this.player.x = 4315;
+        this.player.y = 510;
+      });
+    }
 
     //Score text
     var style = {
@@ -359,7 +364,8 @@ export default class GameScene extends Phaser.Scene {
     ) {
       player.setVelocityY(-300);
       player.anims.play("jump", true);
-      //console.log("Jumped");
+      
+      if (this.debug) console.log("Jumped");
     }
   };
 
@@ -371,7 +377,7 @@ export default class GameScene extends Phaser.Scene {
     let lives = this.lives;
     if ((this.player.health <= 0 || down) && lives != 0) {
       this.lives -= 1;
-      console.log(lives);
+      if (this.debug) console.log("Lives: " + lives);
     }
     if (this.lives == 0) {
       //reset lives and score
@@ -447,7 +453,7 @@ export default class GameScene extends Phaser.Scene {
     gem.destroy(true, true);
     this.score += 10;
     this.updateText();
-    //console.log("SCORE: " + this.score, "scoreText: " + this.scoreText.getText)
+    if(this.debig) console.log("SCORE: " + this.score, "scoreText: " + this.scoreText.getText);
   };
 
   collectHealth = (player, health) => {
@@ -470,7 +476,7 @@ export default class GameScene extends Phaser.Scene {
   };
 
   resetStats = () => {
-    console.log("Reset stats");
+    if (this.debug) console.log("Reset stats");
     this.gemsLoc = [];
     this.lives = this.baseLives;
     this.score = 0;
